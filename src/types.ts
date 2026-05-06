@@ -38,6 +38,7 @@ export interface TaskParams {
   output_format: 'png' | 'jpeg' | 'webp'
   output_compression: number | null
   moderation: 'auto' | 'low'
+  response_format?: 'url' | 'b64_json';
   n: number
 }
 
@@ -47,6 +48,7 @@ export const DEFAULT_PARAMS: TaskParams = {
   output_format: 'png',
   output_compression: null,
   moderation: 'auto',
+  response_format: 'b64_json',
   n: 1,
 }
 

@@ -991,6 +991,19 @@ export default function InputBar() {
           className={selectClass}
         />
       </label>
+      <label className="flex flex-col gap-0.5">
+        <span className="text-gray-400 dark:text-gray-500 ml-1">返回图片格式</span>
+        <Select
+          value={params.response_format || 'b64_json'}
+          onChange={(val) => setParams({ response_format: val as any })}
+          options={[
+            { label: 'Base64', value: 'b64_json' },
+            { label: 'URL', value: 'url' },
+          ]}
+          className={selectClass}
+          title="Base64 可防止第三方接口跨域(CORS)报错"
+        />
+      </label>
       <label
         className="relative flex flex-col gap-0.5"
         onMouseEnter={showCompressionHint}
@@ -1229,7 +1242,7 @@ export default function InputBar() {
           <div className="mt-3">
             {/* 桌面端布局 */}
             <div className="hidden sm:flex items-end justify-between gap-3">
-              {renderParams('grid-cols-6')}
+              {renderParams('grid-cols-7')}
 
               <div className="flex gap-2 flex-shrink-0 mb-0.5">
                 <div
