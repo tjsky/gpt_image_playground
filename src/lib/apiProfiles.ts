@@ -2,6 +2,7 @@ import type { ApiMode, ApiProfile, ApiProvider, AppSettings } from '../types'
 import { readRuntimeEnv } from './runtimeEnv'
 
 const DEFAULT_BASE_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL) || 'https://api.openai.com/v1'
+const DEFAULT_API_KEY = RUNTIME_ENV.DEFAULT_API_KEY || '' // 默认假 Key
 export const DEFAULT_IMAGES_MODEL = 'gpt-image-2'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-5.5'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
@@ -15,7 +16,7 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     name: '默认',
     provider: 'openai',
     baseUrl: DEFAULT_BASE_URL,
-    apiKey: '',
+    apiKey: DEFAULT_API_KEY,
     model: DEFAULT_IMAGES_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
     apiMode: 'images',
@@ -31,7 +32,7 @@ export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): Ap
     name: '新配置',
     provider: 'fal',
     baseUrl: DEFAULT_FAL_BASE_URL,
-    apiKey: '',
+    apiKey: DEFAULT_API_KEY,
     model: DEFAULT_FAL_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
     apiMode: 'images',
@@ -87,7 +88,7 @@ export function normalizeSettings(input: Partial<AppSettings> | unknown): AppSet
   const record = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const legacyProfile = createDefaultOpenAIProfile({
     baseUrl: typeof record.baseUrl === 'string' ? record.baseUrl : DEFAULT_BASE_URL,
-    apiKey: typeof record.apiKey === 'string' ? record.apiKey : '',
+    apiKey: typeof record.apiKey === 'string' ? record.apiKey : DEFAULT_API_KEY,
     model: typeof record.model === 'string' && record.model.trim() ? record.model : DEFAULT_IMAGES_MODEL,
     timeout: typeof record.timeout === 'number' && Number.isFinite(record.timeout) ? record.timeout : DEFAULT_API_TIMEOUT,
     apiMode: record.apiMode === 'responses' ? 'responses' : 'images',
@@ -146,7 +147,7 @@ function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
     profile.name === '默认' &&
     profile.provider === 'openai' &&
     profile.baseUrl === DEFAULT_BASE_URL &&
-    profile.apiKey === '' &&
+    profile.apiKey === DEFAULT_API_KEY &&
     profile.model === DEFAULT_IMAGES_MODEL &&
     profile.timeout === DEFAULT_API_TIMEOUT &&
     profile.apiMode === 'images' &&
@@ -220,7 +221,7 @@ export function mergeImportedSettings(currentSettings: Partial<AppSettings> | un
 
 export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
   baseUrl: DEFAULT_BASE_URL,
-  apiKey: '',
+  apiKey: DEFAULT_API_KEY,
   model: DEFAULT_IMAGES_MODEL,
   timeout: DEFAULT_API_TIMEOUT,
   apiMode: 'images',
