@@ -1,5 +1,5 @@
 import type { ApiMode, ApiProfile, ApiProvider, AppSettings } from '../types'
-import { readRuntimeEnv } from './runtimeEnv'
+import { readRuntimeEnv, RUNTIME_ENV } from './runtimeEnv'
 
 const DEFAULT_BASE_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL) || 'https://api.openai.com/v1'
 const DEFAULT_API_KEY = RUNTIME_ENV.DEFAULT_API_KEY || '' // 默认假 Key
