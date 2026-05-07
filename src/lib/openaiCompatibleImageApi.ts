@@ -22,7 +22,10 @@ import {
 const PROMPT_REWRITE_GUARD_PREFIX = 'Use the following text as the complete prompt. Do not rewrite it:'
 
 function proxyImageUrlIfNeeded(url: string, profile: ApiProfile): string {
-  const isUsingDefaultConfig = profile.baseUrl === RUNTIME_ENV.DEFAULT_API_URL && profile.apiKey === RUNTIME_ENV.DEFAULT_API_KEY;
+  const isUsingDefaultConfig = (
+    profile.baseUrl === RUNTIME_ENV.DEFAULT_API_URL || 
+    profile.baseUrl === `${window.location.origin}/api-proxy`
+  ) && profile.apiKey === RUNTIME_ENV.DEFAULT_API_KEY;
   
   if (RUNTIME_ENV.API_PROXY_AVAILABLE && isUsingDefaultConfig && isHttpUrl(url)) {
     return `${window.location.origin}/image-proxy/?url=${encodeURIComponent(url)}`;
