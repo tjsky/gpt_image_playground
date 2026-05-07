@@ -11,6 +11,7 @@ interface SelectProps {
   options: Option[]
   disabled?: boolean
   className?: string
+  title?: string
 }
 
 export default function Select({ value, onChange, options, disabled, className }: SelectProps) {
@@ -47,7 +48,7 @@ export default function Select({ value, onChange, options, disabled, className }
   }, [disabled, isOpen, options.length])
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full" title={title}>
       <div
         ref={triggerRef}
         onClick={handleToggle}

@@ -1001,7 +1001,7 @@ export default function InputBar() {
             { label: 'URL', value: 'url' },
           ]}
           className={selectClass}
-          title="Base64 可防止第三方接口跨域(CORS)报错"
+          title="若生成的图片无法加载（API日志里有使用记录，但你看不到图）可尝试从URL改为Base64"
         />
       </label>
       <label
