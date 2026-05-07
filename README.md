@@ -8,6 +8,40 @@
 
 ---
 
+## ❗️ 自用修改说明
+**⚠️ 这是一个自用修改版 **
+为了提升项目的易用性并解决跨域难题，本项目基于 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 进行了自用修改，
+
+核心改进 (tjsky 版特有)如下：
+
+#### 一、双层脱敏 API 代理系统
+实现了一套“对访客开箱即用，并兼容使用自有API”的代理方案。通过后端 Nginx 劫持与前端逻辑判断，用户在前端看到的默认API和KEY，仅在本站可用，挪作他用无效，从而确保了实际 API Key 的安全。
+1. 核心配置变量：
+项目引入了 4 个环境变量：
+
+ - `API_PROXY_URL`: **后端真实 API** 实际使用的API地址。
+
+ - `API_PROXY_KEY`: **后端真实 KEY** 实际使用的API令牌。
+
+ - `DEFAULT_API_URL`: **前端虚假 API** 展示在页面设置中的API地址。（随便写一个，比如`https://www.baidu.com`都行）
+
+ - `DEFAULT_API_KEY`: **前端虚假 KEY** 展示在页面设置中的API令牌。（随便写一个，比如`123456`都行）
+
+2. 运行逻辑：当检测到 `ENABLE_API_PROXY=true` 且用户使用系统默认提供的 `DEFAULT_API_URL` 和 `DEFAULT_API_KEY` 时，前端请求将发送至 `/api-proxy/` 由后端 Nginx 验证，动态注入真实的 `API_PROXY_KEY` 并转发至真实的 `API_PROXY_URL`。如果用户手动填入了其它的 API 地址和 KEY，则绕过代理逻辑执行标准请求流。确保用户依然可以使用自己的 API 。
+
+##3# 二、 功能增强：图片下载中转代理与返回格式可选
+
+1. 新增 Base64 返回格式选项，解决部分第三方 API 跨域 (CORS) 报错问题。
+
+2. 内置 Nginx 图片下载代理机制，完美兼容即不支持 Base64 还非要用 URL 返回图片的中转 API 跨域 (CORS) 报错问题，兜底解决接口返回图片跨域问题。
+
+
+#### 三、安全提示与建议
+由于本版本实现的代理机制使得站点在部署后即可“开箱即用”，为了防止 API 额度被滥用，**请务必确保只有授权用户才能访问你的站点**
+
+- **安全建议：** 建议在前端外层部署 Cloudflare Access 或类似的身份验证服务（如 Nginx Auth Basic）确保只有授权用户才能访问你的站点。
+- **版本管理：** 本项目版本号采取 `v原始版本号-tjsky.x` 格式，以区分基于原版那个版本和自用版本号
+
 ## 📸 界面预览
 
 <details>
