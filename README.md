@@ -29,7 +29,7 @@
 
 2. 运行逻辑：当检测到 `ENABLE_API_PROXY=true` 且用户使用系统默认提供的 `DEFAULT_API_URL` 和 `DEFAULT_API_KEY` 时，前端请求将发送至 `/api-proxy/` 由后端 Nginx 验证，动态注入真实的 `API_PROXY_KEY` 并转发至真实的 `API_PROXY_URL`。如果用户手动填入了其它的 API 地址和 KEY，则绕过代理逻辑执行标准请求流。确保用户依然可以使用自己的 API 。
 
-##3# 二、 功能增强：图片下载中转代理与返回格式可选
+#### 二、 功能增强：图片下载中转代理与返回格式可选
 
 1. 新增 Base64 返回格式选项，解决部分第三方 API 跨域 (CORS) 报错问题。
 
