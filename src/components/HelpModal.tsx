@@ -112,17 +112,25 @@ export default function HelpModal({ onClose }: HelpModalProps) {
           )}
         </div>
 
-        <div className="pt-4 border-t border-gray-200 dark:border-white/[0.08] flex justify-center">
+        <div className="pt-4 border-t border-gray-200 dark:border-white/[0.08] flex flex-col items-center gap-3">
+          <a
+            href="https://github.com/tjsky/gpt_image_playground"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group"
+          >
+            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.45-1.695-.45-.36-1.14.09-1.695.09-1.695-1.38-.15-2.73.3-2.73.3-1.08 2.73-.39 3.795-.195 4.14-.84 1.305-1.35 2.895-1.35 4.785 0 6.84 4.155 8.295 8.115 8.685-.435.375-.81 1.02-.81 2.055 0 1.485-.015 2.685-.015 3.045 0 .285-.225.63-.825.525C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            本站源码: tjsky/gpt_image_playground
+          </a>
           <a
             href="https://github.com/CookSleep/gpt_image_playground"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
+            className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-            @CookSleep
+            Original project by: CookSleep/gpt_image_playground
           </a>
         </div>
       </div>
