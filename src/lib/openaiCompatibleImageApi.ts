@@ -28,7 +28,7 @@ function proxyImageUrlIfNeeded(url: string, profile: ApiProfile): string {
   ) && profile.apiKey === RUNTIME_ENV.DEFAULT_API_KEY;
   
   if (RUNTIME_ENV.API_PROXY_AVAILABLE && isUsingDefaultConfig && isHttpUrl(url)) {
-    return `${window.location.origin}/image-proxy/?url=${encodeURIComponent(url)}`;
+    return `${window.location.origin}/image-proxy/?url=${url}`;
   }
   return url;
 }
