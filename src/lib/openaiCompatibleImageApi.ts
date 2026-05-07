@@ -1,6 +1,7 @@
 import type { ApiProfile, ImageApiResponse, ResponsesApiResponse, TaskParams } from '../types'
 import { dataUrlToBlob, imageDataUrlToPngBlob, maskDataUrlToPngBlob } from './canvasImage'
 import { buildApiUrl, isApiProxyAvailable, readClientDevProxyConfig } from './devProxy'
+import { RUNTIME_ENV } from './runtimeEnv'
 import {
   assertImageInputPayloadSize,
   assertMaskEditFileSize,
@@ -19,6 +20,15 @@ import {
 } from './imageApiShared'
 
 const PROMPT_REWRITE_GUARD_PREFIX = 'Use the following text as the complete prompt. Do not rewrite it:'
+
+function proxyImageUrlIfNeeded(url: string, profile: ApiProfile): string {
+  const isUsingDefaultConfig = profile.baseUrl === RUNTIME_ENV.DEFAULT_API_URL && profile.apiKey === RUNTIME_ENV.DEFAULT_API_KEY;
+  
+  if (RUNTIME_ENV.API_PROXY_AVAILABLE && isUsingDefaultConfig && isHttpUrl(url)) {
+    return `${window.location.origin}/image-proxy/?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
 
 function createRequestHeaders(profile: ApiProfile): Record<string, string> {
   return {
@@ -289,7 +299,8 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
       }
 
       if (isHttpUrl(item.url) || isDataUrl(item.url)) {
-        images.push(await fetchImageUrlAsDataUrl(item.url, mime, controller.signal))
+        const proxiedUrl = proxyImageUrlIfNeeded(item.url, profile);
+        images.push(await fetchImageUrlAsDataUrl(proxiedUrl, mime, controller.signal));
         revisedPrompts.push(typeof item.revised_prompt === 'string' ? item.revised_prompt : undefined)
       }
     }
@@ -393,7 +404,7 @@ async function callResponsesImageApiSingle(opts: CallApiOptions, profile: ApiPro
       imageResults[0]?.actualParams ?? {},
     )
     return {
-      images: imageResults.map((result) => result.image),
+      images: imageResults.map((result) => proxyImageUrlIfNeeded(result.image, profile)),
       actualParams,
       actualParamsList: imageResults.map((result) =>
         mergeActualParams(result.actualParams ?? {}),
