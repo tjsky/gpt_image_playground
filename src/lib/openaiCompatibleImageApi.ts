@@ -213,9 +213,7 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
       const imageBlobs: Blob[] = []
       for (let i = 0; i < inputImageDataUrls.length; i++) {
         const dataUrl = inputImageDataUrls[i]
-        const blob = opts.maskDataUrl && i === 0
-          ? await imageDataUrlToPngBlob(dataUrl)
-          : await dataUrlToBlob(dataUrl)
+        const blob = await imageDataUrlToPngBlob(dataUrl) 
         imageBlobs.push(blob)
       }
 
@@ -231,7 +229,7 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
       for (let i = 0; i < imageBlobs.length; i++) {
         const blob = imageBlobs[i]
         const ext = blob.type.split('/')[1] || 'png'
-        formData.append('image', blob, `input-${i + 1}.${ext}`)
+        formData.append('image', blob, `input-${i + 1}.png`)
       }
 
       if (maskBlob) {
