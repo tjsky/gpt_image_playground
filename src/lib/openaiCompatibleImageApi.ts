@@ -109,9 +109,6 @@ function createResponsesImageTool(
     output_format: params.output_format,
   }
 
-  if (params.response_format) {
-    tool.response_format = params.response_format
-  }
   if (!profile.codexCli) {
     tool.quality = params.quality
   }
@@ -313,10 +310,6 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile, cu
       formData.append('size', params.size)
       formData.append('output_format', params.output_format)
       formData.append('moderation', params.moderation)
-
-      if (params.response_format) {
-        formData.append('response_format', params.response_format)
-      }
       
       if (!profile.codexCli) {
         formData.append('quality', params.quality)
@@ -375,10 +368,6 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile, cu
         size: params.size,
         output_format: params.output_format,
         moderation: params.moderation,
-      }
-
-      if (params.response_format) {
-        body.response_format = params.response_format
       }
 
       if (!profile.codexCli) {

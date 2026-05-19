@@ -1523,19 +1523,6 @@ export default function InputBar() {
           className={selectClass}
         />
       </label>
-      <label className="flex flex-col gap-0.5">
-        <span className="text-gray-400 dark:text-gray-500 ml-1">返回图片格式</span>
-        <Select
-          value={params.response_format || 'b64_json'}
-          onChange={(val) => setParams({ response_format: val as any })}
-          options={[
-            { label: 'Base64', value: 'b64_json' },
-            { label: 'URL', value: 'url' },
-          ]}
-          className={selectClass}
-          title="若生成的图片无法加载（API日志里有使用记录，但你看不到图）可尝试从URL改为Base64"
-        />
-      </label>
       <label
         className="relative flex flex-col gap-0.5"
         onMouseEnter={showCompressionHint}

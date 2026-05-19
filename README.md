@@ -28,7 +28,7 @@
 ---
 
 ## ❗️ 自用修改说明
-**⚠️ 这是一个自用修改版 **
+⚠️ ** 这是一个自用修改版 **
 为了提升项目的易用性并解决跨域难题，本项目基于 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 进行了自用修改，
 
 核心改进 (tjsky 版特有)如下：
