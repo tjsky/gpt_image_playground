@@ -28,7 +28,7 @@
 ---
 
 ## ❗️ 自用修改说明
-⚠️ ** 这是一个自用修改版 **
+**这是一个自用修改版**
 为了提升项目的易用性并解决跨域难题，本项目基于 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 进行了自用修改，
 
 核心改进 (tjsky 版特有)如下：
@@ -46,7 +46,7 @@
 
  - `DEFAULT_API_KEY`: **前端虚假 KEY** 展示在页面设置中的API令牌。（随便写一个，比如`123456`都行）
 
-2. 运行逻辑：当检测到 `ENABLE_API_PROXY=true` 且用户使用系统默认提供的 `DEFAULT_API_URL` 和 `DEFAULT_API_KEY` 时，前端请求将发送至 `/api-proxy/` 由后端 Nginx 验证，动态注入真实的 `API_PROXY_KEY` 并转发至真实的 `API_PROXY_URL`。如果用户手动填入了其它的 API 地址和 KEY，则绕过代理逻辑执行标准请求流。确保用户依然可以使用自己的 API 。
+2. 运行逻辑：当检测到 `ENABLE_API_PROXY=true` 且用户使用系统默认提供的 `DEFAULT_API_URL` 和 `DEFAULT_API_KEY` 时，前端请求将发送至 `/api-proxy/` 由后端 Nginx 验证，动态注入真实的 `API_PROXY_KEY` 并转发至真实的 `API_PROXY_URL`。如果用户手动填入了其它的 API 地址和 KEY，则绕过代理逻辑执行标准请求流。确保用户依然可以使用自己的 API 。**(说人话就是：如果你配置了上边的4个变量，并开启了API代理，则项目对访客是开箱即用的)**
 
 #### 二、 功能增强：图片下载中转代理与返回格式可选
 
@@ -60,6 +60,24 @@
 
 - **安全建议：** 建议在前端外层部署 Cloudflare Access 或类似的身份验证服务（如 Nginx Auth Basic）确保只有授权用户才能访问你的站点。
 - **版本管理：** 本项目版本号采取 `v原始版本号-tjsky.x` 格式，以区分基于原版那个版本和自用版本号
+
+#### 四、修改后的Docker Compose 示例
+
+```yaml
+services:
+  gpt-image-playground:
+    container_name: gpt-image-playground-tjsky
+    image: ghcr.io/tjsky/gpt_image_playground:latest
+    environment:
+      - API_PROXY_URL=https://api.openai.com/v1  # 你真实使用的API地址
+      - API_PROXY_KEY=sk-XXXXXXXXXXX # 你真实使用的API KEY
+      - DEFAULT_API_URL=https://www.baidu.com # 访客在前端看到的API地址
+      - DEFAULT_API_KEY=sk-YYYYYYYYYY # 访客在前端看到的API KEY
+      - ENABLE_API_PROXY=true # 开启API代理
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+```
 
 ## 📸 界面预览
 
