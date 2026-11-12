@@ -142,7 +142,7 @@ export default function AboutSettingsTab({ onOpenFontLicenses }: { onOpenFontLic
             </a>
           </p>
           <p data-selectable-text className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-            本项目的成长离不开每一位用户的使用、反馈、贡献与支持，感谢一路有你。
+            本站点基于开源项目 GPT Image Playground 修改，主要用于自建部署与 API 代理配置；核心功能由原作者开发，感谢一路有你。
           </p>
         </div>
         <a
@@ -209,13 +209,9 @@ export default function AboutSettingsTab({ onOpenFontLicenses }: { onOpenFontLic
           right={EXTERNAL}
         />
         <AboutRow
-          icon={(
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          )}
-          title="赞助作者"
-          href="https://www.ifdian.net/a/cooksleep"
+          icon={<GithubIcon className="h-4 w-4" />}
+          title="本站源码"
+          href="https://github.com/tjsky/gpt_image_playground"
           right={EXTERNAL}
         />
       </AboutCard>

@@ -232,7 +232,7 @@ function parseResponsesImageResults(payload: ResponsesApiResponse, fallbackMime:
   return results
 }
 
-async function parseImagesApiResponse(payload: ImageApiResponse, mime: string, signal?: AbortSignal): Promise<CallApiResult> {
+async function parseImagesApiResponse(payload: ImageApiResponse, mime: string, signal?: AbortSignal, viaImageProxy = false): Promise<CallApiResult> {
   const data = payload.data
   if (!Array.isArray(data) || !data.length) {
     const err = new Error('接口没有返回图片数据，请查看原始响应内容确认服务商实际返回的数据结构。如果使用的是中转或兼容接口，建议创建并使用「自定义服务商」配置。')
@@ -253,7 +253,7 @@ async function parseImagesApiResponse(payload: ImageApiResponse, mime: string, s
       }
 
       if (isHttpUrl(item.url) || isDataUrl(item.url)) {
-        images.push(await fetchImageUrlAsDataUrl(item.url, mime, signal))
+        images.push(await fetchImageUrlAsDataUrl(item.url, mime, signal, viaImageProxy))
         revisedPrompts.push(typeof item.revised_prompt === 'string' ? item.revised_prompt : undefined)
       }
     }
@@ -300,6 +300,7 @@ async function parseImagesApiStreamResponse(
   mime: string,
   onPartialImage?: CallApiOptions['onPartialImage'],
   signal?: AbortSignal,
+  viaImageProxy = false,
 ): Promise<CallApiResult> {
   const completedItems: ImageResponseItem[] = []
   let resultPayload: ImageApiResponse | null = null
@@ -333,7 +334,7 @@ async function parseImagesApiStreamResponse(
   })
 
   if (resultPayload) {
-    return parseImagesApiResponse(resultPayload, mime)
+    return parseImagesApiResponse(resultPayload, mime, signal, viaImageProxy)
   }
 
   if (!completedItems.length) {
@@ -349,7 +350,7 @@ async function parseImagesApiStreamResponse(
         continue
       }
       if (isHttpUrl(item.url) || isDataUrl(item.url)) {
-        images.push(await fetchImageUrlAsDataUrl(item.url, mime, signal))
+        images.push(await fetchImageUrlAsDataUrl(item.url, mime, signal, viaImageProxy))
       }
     }
   } catch (err) {
@@ -498,10 +499,11 @@ async function callModelImagesApi(opts: CallApiOptions, profile: ApiProfile): Pr
   if (profile.responseFormatB64Json) body.response_format = 'b64_json'
   assertImageInputPayloadSize(opts.inputImageDataUrls.reduce((sum, url) => sum + url.length, 0))
   const proxyConfig = readClientDevProxyConfig()
+  const useApiProxy = profile.provider === 'openai' && shouldUseApiProxy(profile.apiProxy, proxyConfig)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(createRequestTimeoutError(profile.timeout)), profile.timeout * 1000)
   try {
-    const response = await apiFetch(buildApiUrl(profile.baseUrl, family === 'grok' && !grokSizeParams && isEdit ? 'images/edits' : 'images/generations', proxyConfig, profile.provider === 'openai' && shouldUseApiProxy(profile.apiProxy, proxyConfig)), {
+    const response = await apiFetch(buildApiUrl(profile.baseUrl, family === 'grok' && !grokSizeParams && isEdit ? 'images/edits' : 'images/generations', proxyConfig, useApiProxy), {
       method: 'POST',
       headers: { ...createRequestHeaders(profile), 'Content-Type': 'application/json' },
       cache: 'no-store',
@@ -516,7 +518,7 @@ async function callModelImagesApi(opts: CallApiOptions, profile: ApiProfile): Pr
       clearTimeout(timeoutId)
       return await pollCustomTaskResult(profile, OPENAI_IMAGE_TASK_PROVIDER.poll!, taskId, family === 'grok' ? 'image/jpeg' : 'image/png', controller.signal)
     }
-    return await parseImagesApiResponse(payload, family === 'grok' ? 'image/jpeg' : 'image/png', controller.signal)
+    return await parseImagesApiResponse(payload, family === 'grok' ? 'image/jpeg' : 'image/png', controller.signal, useApiProxy)
   } catch (err) {
     console.warn('图像请求失败', err)
     throw err
@@ -707,10 +709,10 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
     }
 
     if (profile.streamImages && isEventStreamResponse(response)) {
-      return await parseImagesApiStreamResponse(response, mime, opts.onPartialImage, controller.signal)
+      return await parseImagesApiStreamResponse(response, mime, opts.onPartialImage, controller.signal, useApiProxy)
     }
 
-    return await parseImagesApiResponse(await response.json() as ImageApiResponse, mime, controller.signal)
+    return await parseImagesApiResponse(await response.json() as ImageApiResponse, mime, controller.signal, useApiProxy)
   } finally {
     clearTimeout(timeoutId)
   }

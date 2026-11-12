@@ -190,12 +190,30 @@ async function probeNoCorsReachability(url: string, timeoutMs = 8000): Promise<'
   }
 }
 
-export async function fetchImageUrlAsDataUrl(url: string, fallbackMime: string, signal?: AbortSignal): Promise<string> {
+/**
+ * 把图片 URL 换成本站图片中转地址，绕开中转站返回 URL 时的浏览器跨域限制。
+ * 只在请求真正经过本站 API 代理时使用；站点未部署代理时不会有任何改写。
+ */
+export function buildSiteImageProxyUrl(url: string): string {
+  return `${window.location.origin}/image-proxy/?url=${encodeURIComponent(url)}`
+}
+
+/**
+ * @param viaImageProxy 图片是否来自本站 API 代理返回；为 true 时改走 /image-proxy/ 下载
+ */
+export async function fetchImageUrlAsDataUrl(
+  url: string,
+  fallbackMime: string,
+  signal?: AbortSignal,
+  viaImageProxy = false,
+): Promise<string> {
   if (isDataUrl(url)) return url
+
+  const targetUrl = viaImageProxy && isHttpUrl(url) ? buildSiteImageProxyUrl(url) : url
 
   let response: Response
   try {
-    response = await apiFetch(url, {
+    response = await apiFetch(targetUrl, {
       cache: 'no-store',
       signal,
     })
@@ -203,7 +221,7 @@ export async function fetchImageUrlAsDataUrl(url: string, fallbackMime: string, 
     if (err instanceof TypeError) {
       // 客户端由 Rust 侧发出请求，不存在跨域问题，也不需要 no-cors 探测
       if (isTauri) throw new Error(`图片链接下载失败（可能因链接过期或网络异常）。${IMAGE_FETCH_CORS_HINT}`)
-      const probe = await probeNoCorsReachability(url)
+      const probe = await probeNoCorsReachability(targetUrl)
       if (probe === 'opaque') {
         throw new Error(`图片已生成，但因服务商未允许跨域，图片链接下载失败。${IMAGE_FETCH_CORS_HINT}`)
       }

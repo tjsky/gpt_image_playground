@@ -30,6 +30,8 @@ import { DEFAULT_PRIVACY_MODE_SHORTCUT, normalizeShortcutSetting } from './keybo
 
 const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
+// 前端展示用的「假 KEY」：只用于 Nginx 侧校验站点代理，泄露也无价值；真实 KEY 只在容器内
+const DEFAULT_API_KEY = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_KEY)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
 const DOCKER_DEPLOYMENT = readRuntimeEnv(import.meta.env.VITE_DOCKER_DEPLOYMENT) === 'true'
 const DEFAULT_API_URL_PATCH = isImportableConfigUrl(RAW_DEFAULT_API_URL)
@@ -390,7 +392,7 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     name: DEFAULT_API_URL_PATCH?.name ?? '默认',
     provider: 'openai',
     baseUrl: DEFAULT_BASE_URL,
-    apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? '',
+    apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? DEFAULT_API_KEY,
     model: DEFAULT_API_URL_PATCH?.model ?? (apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_IMAGES_MODEL),
     imageGenerationModel: DEFAULT_API_URL_PATCH?.imageGenerationModel ?? DEFAULT_IMAGES_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
@@ -717,7 +719,7 @@ export function normalizeSettings(input: Partial<AppSettings> | unknown): AppSet
   const legacyApiMode: ApiMode = record.apiMode === 'responses' ? 'responses' : 'images'
   const legacyProfile = normalizeApiProfile({
     baseUrl: typeof record.baseUrl === 'string' ? record.baseUrl : DEFAULT_BASE_URL,
-    apiKey: typeof record.apiKey === 'string' ? record.apiKey : '',
+    apiKey: typeof record.apiKey === 'string' ? record.apiKey : DEFAULT_API_KEY,
     model: record.model,
     imageGenerationModel: record.imageGenerationModel,
     timeout: typeof record.timeout === 'number' && Number.isFinite(record.timeout) ? record.timeout : DEFAULT_API_TIMEOUT,
@@ -1008,7 +1010,7 @@ function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
     profile.name === '默认' &&
     profile.provider === 'openai' &&
     profile.baseUrl === DEFAULT_BASE_URL &&
-    profile.apiKey === '' &&
+    profile.apiKey === DEFAULT_API_KEY &&
     profile.model === DEFAULT_IMAGES_MODEL &&
     profile.imageGenerationModel === DEFAULT_IMAGES_MODEL &&
     profile.timeout === DEFAULT_API_TIMEOUT &&
