@@ -2,67 +2,31 @@
 
 <img src="public/pwa-icon.svg" alt="GPT Image Playground" width="128" height="128">
 
-# GPT Image Playground
+# GPT Image Playground 自用修改版
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/CookSleep/gpt_image_playground?style=flat-square&color=eab308)](https://github.com/CookSleep/gpt_image_playground/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/CookSleep/gpt_image_playground?style=flat-square&color=3b82f6)](https://github.com/CookSleep/gpt_image_playground/network/members)
-[![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)](https://github.com/CookSleep/gpt_image_playground/blob/main/LICENSE)
+[![GitHub Repo stars](https://img.shields.io/github/stars/tjsky/gpt_image_playground?style=flat-square&color=eab308)](https://github.com/tjsky/gpt_image_playground/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)](https://github.com/tjsky/gpt_image_playground/blob/main/LICENSE)
 [![React](https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-**支持 GPT Image、Gemini（Nano Banana）和 Grok 的图片生成与编辑工具**
+**支持 GPT Image、Gemini（Nano Banana）和 Grok 的图片生成与编辑工具（自用修改版）**
 
 提供 Web UI 和 Windows 客户端，支持官方接口、OpenAI 兼容接口、sub2api、fal.ai 与自定义 HTTP 供应商。<br>
 支持文本生图、参考图编辑、画板标注、遮罩编辑与 Agent 多轮对话，图片和历史记录保存在本地。
 
-<br>
-
-[![Vercel 在线体验](https://img.shields.io/badge/Vercel-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-black?style=for-the-badge&logo=vercel&logoColor=white)](https://gpt-image-playground.cooksleep.dev)
-&nbsp;&nbsp;&nbsp;
-[![GitHub Pages 在线体验](https://img.shields.io/badge/GitHub%20Pages-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-222222?style=for-the-badge&logo=github&logoColor=white)](https://cooksleep.github.io/gpt_image_playground)
-
 </div>
-
-<br>
-
-> 💡 **提示**：Vercel 体验版使用 `.dev` 域名，受安全策略限制通常只能调用 HTTPS 接口。需要调用内网或本地 HTTP API 时，请使用 GitHub Pages 版本或自行部署。
 
 ---
 
-## ❤️ 赞助商
+## 🔧 自用修改版说明
 
-<table>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://go.apimart.ai/gh-gpt_image_playground"><img src="https://github.com/user-attachments/assets/d38e62e8-55be-4b3b-84cd-b7812c35a228" alt="APIMart" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://go.apimart.ai/gh-gpt_image_playground">APIMart</a></b>&nbsp;是专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低至 $0.006/张，1 美元可出图 160+ 张。图片、视频一套异步 API 通吃，提交任务拿 ID、回调取结果，跑批万张不超时、换模型不改代码。按量付费、无月费，通过<a href="https://go.apimart.ai/gh-gpt_image_playground">此注册链接</a>注册即可开用。</td>
-</tr>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://moyuu.cc/register?aff=z95r"><img src="https://github.com/user-attachments/assets/b5b14eaa-8f24-41fd-89aa-d681400a3c84" alt="摸鱼 AI" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://moyuu.cc/register?aff=z95r">摸鱼 AI</a></b>&nbsp;，让 AI API 接入更简单。明码标价，充值 1:1，支持 GPT、Claude、Gemini 等主流模型，重新定义「便宜 · 稳定 · 高速」</td>
-</tr>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://jucodex.com/register?aff=3JDW"><img src="https://github.com/user-attachments/assets/1980f1ef-d594-457d-b7e4-a0dbff467984" alt="JuCodex" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://jucodex.com/register?aff=3JDW">JuCodex</a></b>&nbsp;为企业级用户打造的高可用、低延迟、极致性价比的中转站，提供 Codex、Claude Code、Grok 等主流大模型中转服务，新用户注册送 3 元（QQ 邮箱），永久承诺 0 水 0 替、模型 100% 保真。<a href="https://image.jucodex.com">生图工作台</a></td>
-</tr>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://api.muteki.site/register?aff=CookSleep&promo=CookSleep"><img src="https://github.com/user-attachments/assets/0247d44d-d76b-458b-b8f5-9714ec46e7de" alt="MaruCode" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://api.muteki.site/register?aff=CookSleep&promo=CookSleep">MaruCode</a></b>&nbsp;是一家偶尔做做慈善的小破站 API，自营号池，主要提供 OpenAI、Anthropic、GPT Image 等主流模型，支持 Websocket 协议，明码标价(OAI 0.3x, A÷ 1.7x)，透明汇率(1:1)，<a href="https://api.muteki.site/register?aff=CookSleep&promo=CookSleep">新用户注册送 1 刀</a>。<a href="https://images-2.muteki.site">生图工作台🖼️</a></td>
-</tr>
-<tr>
-<td width="180" align="center" valign="middle">
-  <a href="https://api.sublyx.org/register?aff=U62PAZERCHEA"><img src="https://github.com/user-attachments/assets/828b0b12-f07d-4408-a6d7-627056b81b76" alt="Sublyx" width="150"></a>
-</td>
-<td valign="middle"><b><a href="https://api.sublyx.org/register?aff=U62PAZERCHEA">Sublyx</a></b>&nbsp;是一家稳定高效的 AI API 聚合网关，支持 OpenAI、Claude、Grok、Codex、gpt-image-2 等主流模型，兼容 OpenAI SDK、Claude Code、Codex、Cherry Studio 等常用工具。通过<a href="https://api.sublyx.org/register?aff=U62PAZERCHEA">链接注册</a>并使用优惠码 <code>IMG2</code>，可额外领取 10 刀额度。<a href="https://img2.icedit.ai">生图工作台</a></td>
-</tr>
-</table>
+本项目是 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 的自用修改版（版本号形如 `v0.9.0-tjsky.1`）。核心功能与架构由原作者开发，本仓库只改造部署与代理相关部分：
+
+- **双层脱敏 API 代理**：前端只持有「假 API 地址 + 假 KEY」，真实上游与真实 KEY 只存在于容器内；Nginx 校验假 KEY 后注入真 KEY 转发，访客在前端看不到任何中转站信息。
+- **图片下载中转**：中转站返回图片 URL 时改走本站 `/image-proxy/` 下载，绕开浏览器跨域限制，并带域名白名单防 SSRF。
+- 已移除上游的赞助商展示与推广预置（`sponsor-presets.json`、公告推广素材、设置页赞助入口）。
+
+配置方法见 [站点 API 代理](#site-api-proxy)。
 
 ---
 
@@ -439,6 +403,79 @@ npm run build
 
 ---
 
+<a id="site-api-proxy"></a>
+## 🛡️ 站点 API 代理（双层脱敏）
+
+本版本在 Nginx 层加了一层「假 KEY 校验 + 真 KEY 注入」：站点对访客开箱即用，而访客在前端既看不到中转站信息，也拿不到可用的真实 KEY。
+
+```
+浏览器 ──「假地址 + 假 KEY」──▶ 本站 Nginx ──「真实上游 + 真实 KEY」──▶ 中转站
+                                │
+                                ├─ /api-proxy/*          校验假 KEY、注入真 KEY、路径白名单、限流
+                                └─ /image-proxy/?url=*   域名白名单校验后中转图片，绕开跨域
+```
+
+- 访客使用默认配置时，前端把请求发到同源 `/api-proxy/...`；Nginx 校验 `Authorization` 是否等于假 KEY，再改写成真实 KEY 转发到真实上游。
+- 访客新建配置填自己的 API 地址与 KEY 时，请求不经本站代理，直连自己的服务商（因此 `LOCK_API_PROXY` 应保持 `false`）。
+- 真实上游与真实 KEY 只存在于容器环境变量或挂载的 `relay/api-target.conf`，**不会进入 JS 产物**。
+
+**docker compose 示例**（完整版见 [`deploy/docker-compose.example.yml`](deploy/docker-compose.example.yml)）
+
+```yaml
+services:
+  gpt-image-playground:
+    image: ghcr.io/tjsky/gpt_image_playground:latest
+    restart: unless-stopped
+    ports: ["8080:80"]
+    environment:
+      DEFAULT_API_URL: https://api.example.com/v1    # 前端可见的假地址，随便填
+      DEFAULT_API_KEY: sk-fake-please-change         # 前端可见的假 KEY
+      ENABLE_API_PROXY: "true"
+      LOCK_API_PROXY: "false"
+    volumes:
+      - ./relay/api-target.conf:/etc/nginx/relay/api-target.conf:ro
+      - ./relay/image-allow.conf:/etc/nginx/relay/image-allow.conf:ro
+```
+
+**管理中转站（推荐：挂载配置文件，`reload` 生效，不用重建镜像）**
+
+1. 复制 [`deploy/relay/api-target.conf.example`](deploy/relay/api-target.conf.example) 为 `relay/api-target.conf`，填真实上游与真实 KEY（`chmod 600`，不要提交到 git）。
+2. 复制 [`deploy/relay/image-allow.conf.example`](deploy/relay/image-allow.conf.example) 为 `relay/image-allow.conf`，填中转站图片 CDN 域名白名单。
+3. 改完执行：
+
+```bash
+docker compose exec gpt-image-playground nginx -s reload
+```
+
+多中转站：每个站一份 `api-target.<名字>.conf`，用软链接切换后 reload：
+
+```bash
+ln -sfn api-target.a.conf relay/api-target.conf
+docker compose exec gpt-image-playground nginx -s reload
+```
+
+不挂载文件时，也可用 `API_PROXY_URL` / `API_PROXY_KEY` / `IMAGE_PROXY_ALLOW_HOSTS` 三个环境变量，容器启动时自动生成同样的片段（改这三个变量需要重启容器）。
+
+**安全提醒**
+
+- 代理对访客开箱即用，等于把额度开放给所有能访问站点的人：建议外层加 Cloudflare Access 或 Nginx Basic Auth，并留意上游用量。
+- 已内置：路径白名单（仅 `images/generations`、`images/edits`、`responses`、`tasks/*`）、每 IP 限流、图片代理 https 与内网地址拦截。
+- 若前面还有 Cloudflare，限流看到的是回源 IP，需另配 realip 才能按真实访客限流。
+
+**自检命令**
+
+```bash
+# 假 KEY 不匹配 → 401
+curl -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8080/api-proxy/images/generations
+# 白名单外的路径 → 403
+curl -o /dev/null -w '%{http_code}\n' -X POST -H 'Authorization: Bearer sk-fake-please-change' \
+  http://localhost:8080/api-proxy/chat/completions
+# 图片代理 SSRF → 403
+curl -o /dev/null -w '%{http_code}\n' 'http://localhost:8080/image-proxy/?url=http://127.0.0.1/'
+```
+
+---
+
 <a id="env-vars"></a>
 ## ⚙️ 环境变量
 
@@ -458,6 +495,10 @@ npm run build
 | `VITE_DEFAULT_UI_FONT` | `DEFAULT_UI_FONT` | 默认界面字体：`builtin`（内置，默认）、`system`（系统字体）或本机已安装的字体名称 |
 | `VITE_DEFAULT_MONO_FONT` | `DEFAULT_MONO_FONT` | 默认代码字体，取值规则同 `VITE_DEFAULT_UI_FONT` |
 | `VITE_BUILTIN_FONT_SOURCE` | `BUILTIN_FONT_SOURCE` | 内置字体来源：`cdn`（默认，公共 CDN）或 `local`（[`fonts/`](fonts) 目录中的文件） |
+| `VITE_DEFAULT_API_KEY` | `DEFAULT_API_KEY` | 前端展示的「假 KEY」，仅用于 Nginx 校验站点代理，泄露无价值 |
+| — | `API_PROXY_URL` | 真实上游地址，**只在容器内**，不要写进任何 `VITE_` 变量 |
+| — | `API_PROXY_KEY` | 真实上游 KEY，**只在容器内** |
+| — | `IMAGE_PROXY_ALLOW_HOSTS` | 图片代理域名白名单，逗号分隔，如 `cdn.example.com,files.example.com` |
 
 > 旧变量 `VITE_SHOW_DEFAULT_CONFIG_ONLY`／`SHOW_DEFAULT_CONFIG_ONLY` 仍可使用，等同于对应的 `SHOW_PRESET_CONFIG_ONLY`。
 
@@ -819,24 +860,6 @@ https://cooksleep.github.io/gpt_image_playground?apiUrl={address}&apiKey={key}&m
 本项目基于 [MIT License](LICENSE) 开源。
 
 特别致谢：[LINUX DO](https://linux.do)
-
-## 💜 赞助支持
-
-<div align="center">
-
-如果这个项目对你有帮助，欢迎通过爱发电赞助支持，你的每一份鼓励都是持续更新的动力！
-
-<br>
-<br>
-
-<a href="https://www.ifdian.net/a/cooksleep">
-  <img src="https://img.shields.io/badge/%E7%88%B1%E5%8F%91%E7%94%B5-%E8%B5%9E%E5%8A%A9%E4%BD%9C%E8%80%85-946ce6?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyMS4zNWwtMS40NS0xLjMyQzUuNCAxNS4zNiAyIDEyLjI4IDIgOC41IDIgNS40MiA0LjQyIDMgNy41IDNjMS43NCAwIDMuNDEuODEgNC41IDIuMDlDMTMuMDkgMy44MSAxNC43NiAzIDE2LjUgMyAxOS41OCAzIDIyIDUuNDIgMjIgOC41YzAgMy43OC0zLjQgNi44Ni04LjU1IDExLjU0TDEyIDIxLjM1eiIvPjwvc3ZnPg==&logoColor=white" alt="爱发电赞助" />
-</a>
-
-<br>
-<br>
-
-</div>
 
 ## ⭐ Star History
 
