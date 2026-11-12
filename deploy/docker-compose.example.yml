@@ -1,0 +1,31 @@
+# 站点 API 代理部署示例（docker compose）
+# 复制为 docker-compose.yml 后按需修改。密钥建议放同目录 .env（不要提交到 git）。
+
+services:
+  gpt-image-playground:
+    image: ghcr.io/tjsky/gpt_image_playground:latest
+    container_name: gpt-image-playground
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      # ---- 前端可见（访客在设置里看到的就是这两个值）----
+      # 假地址：填一个与中转站无关的假域名，前端不会真的请求它
+      DEFAULT_API_URL: https://api.example.com/v1
+      # 假 KEY：随意填写，仅用于 Nginx 侧校验，泄露也无价值
+      DEFAULT_API_KEY: sk-fake-please-change
+
+      # ---- 后端真实配置（只存在于容器内，不会进入前端产物）----
+      # 也可改用挂载 relay/api-target.conf 的方式，二者取其一
+      API_PROXY_URL: ${API_PROXY_URL}
+      API_PROXY_KEY: ${API_PROXY_KEY}
+      # 图片代理域名白名单（可选，逗号分隔）
+      IMAGE_PROXY_ALLOW_HOSTS: ${IMAGE_PROXY_ALLOW_HOSTS:-}
+
+      ENABLE_API_PROXY: "true"
+      # 允许访客改用自己填的 API / KEY，所以不要开启锁定
+      LOCK_API_PROXY: "false"
+    # 推荐：用挂载文件管理真实上游，改完 nginx -s reload 即可生效，无需重建容器
+    # volumes:
+    #   - ./relay/api-target.conf:/etc/nginx/relay/api-target.conf:ro
+    #   - ./relay/image-allow.conf:/etc/nginx/relay/image-allow.conf:ro

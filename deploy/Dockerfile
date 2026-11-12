@@ -4,6 +4,7 @@ FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /app
 
 ENV VITE_DEFAULT_API_URL=__VITE_DEFAULT_API_URL_PLACEHOLDER__
+ENV VITE_DEFAULT_API_KEY=__VITE_DEFAULT_API_KEY_PLACEHOLDER__
 ENV VITE_API_PROXY_AVAILABLE=__VITE_API_PROXY_AVAILABLE_PLACEHOLDER__
 ENV VITE_API_PROXY_LOCKED=__VITE_API_PROXY_LOCKED_PLACEHOLDER__
 ENV VITE_DOCKER_DEPLOYMENT=__VITE_DOCKER_DEPLOYMENT_PLACEHOLDER__
@@ -27,8 +28,14 @@ FROM nginx:alpine
 
 ENV HOST=0.0.0.0
 ENV PORT=80
+# 前端可见的「假」地址与「假」KEY（可随意填写，仅用于前端展示与 Nginx 侧校验）
 ENV DEFAULT_API_URL=
+ENV DEFAULT_API_KEY=
+# 后端真实上游与真实 KEY（只存在于容器内，不会进入前端产物）
 ENV API_PROXY_URL=
+ENV API_PROXY_KEY=
+# 图片代理域名白名单，逗号分隔，如 cdn.example.com,files.example.com
+ENV IMAGE_PROXY_ALLOW_HOSTS=
 ENV ENABLE_API_PROXY=false
 ENV LOCK_API_PROXY=false
 ENV SHOW_PRESET_CONFIG_ONLY=false
@@ -41,7 +48,11 @@ ENV BUILTIN_FONT_SOURCE=
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY deploy/nginx.conf /etc/nginx/templates/default.conf.template
+# API 代理限流 zone（http 上下文，需在 main.conf 的 conf.d 包含范围内）
+COPY deploy/00-api-proxy-zone.conf /etc/nginx/conf.d/00-api-proxy-zone.conf
 COPY --chmod=755 deploy/migrate-api-env.envsh /docker-entrypoint.d/05-migrate-api-env.envsh
+# 生成 /etc/nginx/relay/ 下的真实上游与图片白名单片段（必须早于 20-envsubst）
+COPY --chmod=755 deploy/10-relay-conf.sh /docker-entrypoint.d/10-relay-conf.sh
 COPY --chmod=755 deploy/inject-api-url.sh /docker-entrypoint.d/40-inject-api-url.sh
 
 EXPOSE 80

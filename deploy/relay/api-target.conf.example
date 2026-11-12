@@ -1,0 +1,23 @@
+# ============================================================
+# 站点 API 代理的「真实上游 + 真实 KEY」
+# ============================================================
+# 用法：复制本文件到宿主机（建议 chmod 600、不要提交到 git），
+#       在 docker-compose 里挂载到：
+#         - ./relay/api-target.conf:/etc/nginx/relay/api-target.conf:ro
+#       挂载后容器启动脚本不会再用环境变量生成，改完执行：
+#         docker compose exec gpt-image-playground nginx -s reload
+#
+# 本文件会被 include 进 location /api-proxy/，只能写 location 级指令。
+# 注意 proxy_pass 末尾的 / 必须保留：Nginx 用它替换 /api-proxy/ 前缀。
+
+proxy_pass https://relay-a.example.com/v1/;
+proxy_set_header Authorization "Bearer sk-把这里换成真实KEY";
+proxy_hide_header Server;
+
+# ------------------------------------------------------------
+# 多中转站管理：一份配置一个文件，用软链接切换（零重启成本）
+#   relay/api-target.a.conf   → 中转站 A
+#   relay/api-target.b.conf   → 中转站 B
+#   ln -sfn api-target.a.conf relay/api-target.conf
+#   docker compose exec gpt-image-playground nginx -s reload
+# ------------------------------------------------------------

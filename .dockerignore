@@ -5,3 +5,9 @@ dist
 *.md
 Dockerfile
 .dockerignore
+# 网页版构建用不到，排除以缩小构建上下文
+# 注意：fonts/ 必须保留（src/lib/fonts.ts 动态 import），skills/ 必须保留（tsc 会检查 src 下对 skills 的 md 引用）
+src-tauri
+docs
+third-party-licenses
+.github

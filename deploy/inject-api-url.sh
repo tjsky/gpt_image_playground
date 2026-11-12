@@ -90,9 +90,12 @@ DEFAULT_UI_FONT_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$DEFAULT_U
 DEFAULT_MONO_FONT_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$DEFAULT_MONO_FONT")")
 # 内置字体加载来源：local（本站）/ cdn（公共 CDN）；留空时为 cdn
 BUILTIN_FONT_SOURCE_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$BUILTIN_FONT_SOURCE")")
+# 前端持有的「假 KEY」：只在 Nginx 侧校验用，泄露也无价值；真实 KEY 由 deploy/10-relay-conf.sh 注入
+DEFAULT_API_KEY_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$DEFAULT_API_KEY")")
 
 # 查找所有 js 文件并将占位符替换为运行时配置
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_API_URL_PLACEHOLDER__|$DEFAULT_API_URL_ESCAPED|g" {} +
+find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_API_KEY_PLACEHOLDER__|$DEFAULT_API_KEY_ESCAPED|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_API_PROXY_AVAILABLE_PLACEHOLDER__|$API_PROXY_AVAILABLE|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_API_PROXY_LOCKED_PLACEHOLDER__|$API_PROXY_LOCKED|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DOCKER_DEPLOYMENT_PLACEHOLDER__|true|g" {} +
@@ -109,6 +112,14 @@ find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_BU
 if [ "$ENABLE_API_PROXY" != "true" ]; then
     # 删除代理配置块
     sed -i '/# BEGIN API PROXY/,/# END API PROXY/d' /etc/nginx/conf.d/default.conf
+fi
+
+# 未配置假 KEY 时必须去掉校验，否则整站代理请求全被 401（同时告警，说明代理处于敞开状态）
+if [ -z "$DEFAULT_API_KEY" ]; then
+    sed -i '/# BEGIN KEY CHECK/,/# END KEY CHECK/d' /etc/nginx/conf.d/default.conf
+    if [ "$ENABLE_API_PROXY" = "true" ]; then
+        echo "警告：未设置 DEFAULT_API_KEY，已关闭代理假 KEY 校验，任何访问者都可调用本站代理额度" >&2
+    fi
 fi
 
 exec "$@"
