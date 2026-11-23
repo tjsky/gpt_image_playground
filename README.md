@@ -26,7 +26,7 @@
 - **图片下载中转**：中转站返回图片 URL 时改走本站 `/image-proxy/` 下载，绕开浏览器跨域限制，并带域名白名单防 SSRF。目标 URL 由请求头 `X-Image-URL` 传递（查询串会被 Nginx 原样透传，带 `&` 的签名 URL 会被截断）。
 - 已移除上游的赞助商展示与推广预置（`sponsor-presets.json`、公告推广素材、设置页赞助入口）。
 
-配置方法见 [站点 API 代理](#site-api-proxy)。
+部署方式只有一种：Docker 镜像 + `docker compose`，见 [`deploy/DEPLOY-DOCKER.md`](deploy/DEPLOY-DOCKER.md)。配置方法见 [站点 API 代理](#site-api-proxy)。
 
 ---
 
@@ -144,13 +144,13 @@
 
 ## 🚀 部署与使用
 
-Windows 用户可以直接安装桌面客户端；网页版可以部署到 Vercel、GitHub Pages、Cloudflare Workers、Docker 或任意静态文件服务器。
+本仓库只发布 **Docker 镜像**，用 `docker compose` 部署到自己的服务器，配合外层 Nginx / Cloudflare Access 做访问控制。完整步骤见 [`deploy/DEPLOY-DOCKER.md`](deploy/DEPLOY-DOCKER.md)。
 
 部署时可以通过环境变量 `VITE_DEFAULT_API_URL` 提供**预置配置**：部署端预先加入用户配置列表的 API 配置，格式与用户自建的配置相同，用户打开页面通常只需补充 API Key。
 
 完整写法见 [预置配置](#preset-config)，其余变量见 [环境变量](#env-vars)。
 
-仓库中的 GitHub Actions 工作流分别负责客户端、Vercel、GitHub Pages 和 Docker 镜像，不需要的可在 **Actions** 中选中对应工作流后停用（**Disable workflow**）。
+仓库中只剩一条发布工作流：推送 `v*` tag 时构建并推送 Docker 镜像到 GHCR。桌面客户端的构建入口保留为手动触发，不参与发版。
 
 <a id="desktop-client"></a>
 <details>
@@ -186,99 +186,13 @@ npm run tauri:build
 - 客户端专用变量 `VITE_WEB_APP_URL`：复制导入链接时使用的网页版地址，未设置时改用 `gpt-image-playground://` 链接。
 - `tauri:build` 需设置 `TAURI_SIGNING_PRIVATE_KEY`（私钥内容或路径）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，用于给更新包签名。
 - 自行分发时，用 `npx tauri signer generate` 生成自己的密钥，并替换 `src-tauri/tauri.conf.json` 中的 `plugins.updater.pubkey` 和更新地址。
-- 推送 `v*` tag 时，若仓库 Secrets 配置了 `TAURI_SIGNING_PRIVATE_KEY`（及其密码），会先构建客户端并上传到 Release，成功后再部署网页版和 Docker 镜像；未配置则跳过客户端，直接部署。
-
-</details>
-
-<details>
-<summary><strong>▲ 方式二：Vercel 一键部署（网页版推荐）</strong></summary>
-
-**初始部署**
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCookSleep%2Fgpt_image_playground&project-name=gpt-image-playground&repository-name=gpt-image-playground)
-
-点击按钮导入仓库，Vercel 会自动构建并部署。
-
-**环境变量（可选）**
-
-在 Vercel 项目的 **「Settings → Environment Variables」** 中添加，添加或修改后需要重新部署：
-
-```dotenv
-VITE_DEFAULT_API_URL=https://api.openai.com/v1
-```
-
-**绑定自定义域名（国内直连）**
-
-Vercel 分配的 `.vercel.app` 域名在国内通常无法直接访问，可在 **「Settings → Domains」** 中绑定自己的域名。
-
-**更新方式**
-
-`vercel.json` 关闭了默认的自动部署。Fork 本仓库后，建议配置 Deploy Hook：
-
-1. 在 Vercel 项目的 **「Settings → Git → Deploy Hooks」** 中创建名为 `Release` 的 Hook（Branch 填 `main`），复制生成的 URL。
-2. 在 Fork 仓库的 **「Settings → Secrets and variables → Actions」** 中新建 Secret `VERCEL_DEPLOY_HOOK`，填入该 URL。
-
-配置完成后：
-
-- **自动更新**：本仓库发布正式版本（版本号变动）后，在 Fork 页面点击 **Sync fork** 会触发 Vercel 部署；普通提交不会触发。
-- **手动触发**：在 **Actions** 中选择 **Deploy to Vercel**，对 `main` 分支执行 **Run workflow**，可立即部署最新代码（包括未发布的提交）。
-
-</details>
-
-<details>
-<summary><strong>🌐 方式三：GitHub Pages 部署</strong></summary>
-
-通过 GitHub Actions 工作流构建并发布到 GitHub Pages。
-
-**环境变量（可选）**
-
-在仓库 **「Settings → Secrets and variables → Actions」** 中，将 `VITE_DEFAULT_API_URL` 添加到 **Secrets**：
-
-```dotenv
-VITE_DEFAULT_API_URL=https://api.openai.com/v1
-```
-
-其他变量添加到 **Variables**，变量名与 [环境变量](#env-vars) 表一致。
-
-**初始部署**
-
-1. 在仓库 **「Settings → Pages」** 中，将 **「Build and deployment → Source」** 设为 **GitHub Actions**。
-2. 在 **Actions** 中选择 **Deploy to GitHub Pages**，对 `main` 分支执行 **Run workflow**，完成首次部署。
-
-**更新方式**
-
-- **自动更新**：本仓库发布正式版本（版本号变动）后，在 Fork 页面点击 **Sync fork** 会自动构建并部署；普通提交不会触发。
-- **手动触发**：同样执行 **Deploy to GitHub Pages** 工作流，可立即部署最新代码（包括未发布的提交）。
-
-</details>
-
-<details>
-<summary><strong>☁️ 方式四：Cloudflare Workers 部署</strong></summary>
-
-通过内置的 Wrangler 配置，将构建产物作为静态资源部署到 Cloudflare Workers。
-
-**环境变量（可选）**
-
-Cloudflare Workers 不会在部署后改写静态文件，变量必须在构建前设置（如写入项目根目录的 `.env.local`）：
-
-```dotenv
-VITE_DEFAULT_API_URL=https://api.openai.com/v1
-```
-
-**部署**
-
-```bash
-npx wrangler login
-npm run deploy:cf
-```
-
-`deploy:cf` 会先执行 `npm run build`，再通过 `wrangler deploy` 上传 `dist/` 目录。
+- 本仓库**不构建**桌面客户端，上面的安装包来自上游发布版；`src-tauri/` 仅作保留。
 
 </details>
 
 <a id="docker-deployment"></a>
 <details>
-<summary><strong>🐳 方式五：Docker 部署</strong></summary>
+<summary><strong>🐳 方式二：Docker 部署（唯一支持的方式）</strong></summary>
 
 使用官方镜像在服务器或本地容器环境中运行。
 
@@ -352,7 +266,7 @@ docker run -d -p 8080:80 \
 </details>
 
 <details>
-<summary><strong>💻 方式六：本地开发与静态构建</strong></summary>
+<summary><strong>💻 方式三：本地开发与静态构建</strong></summary>
 
 **1. 环境变量（可选）**
 
@@ -577,7 +491,7 @@ VITE_DEFAULT_API_URL=https://api.openai.com/v1?model=gpt-image-2.6-sunburst&apiM
 
 - **仓库内或本地文件（推荐）**：填写相对项目根目录的路径，如 `./gpt-image-config.example.json`。Docker 中填写容器内路径，宿主机文件需挂载到容器内。
 - **远程文件**：填写以 `.json` 结尾的 HTTP／HTTPS 地址，只需部署服务器能访问（可位于内网），用户浏览器不必能访问。
-- **导入链接**：在 [Vercel 在线体验](https://gpt-image-playground.cooksleep.dev) 或 [GitHub Pages 在线体验](https://cooksleep.github.io/gpt_image_playground) 中配置好后，复制配置的导入链接（含 `?settings=` 参数，不勾选“New API 变量配置”）。链接只包含当前选中的配置及其关联的自定义供应商。
+- **导入链接**：在本站配置好后，复制配置的导入链接（含 `?settings=` 参数，不勾选“New API 变量配置”）。链接只包含当前选中的配置及其关联的自定义供应商。
 
 ```dotenv
 VITE_DEFAULT_API_URL=./gpt-image-config.example.json
@@ -733,7 +647,7 @@ API 不是标准 OpenAI 格式时，在预置 JSON 的 `customProviders` 中定�
 
 **获取供应商定义**
 
-- **AI 生成**：在 [Vercel 在线体验](https://gpt-image-playground.cooksleep.dev) 或 [GitHub Pages 在线体验](https://cooksleep.github.io/gpt_image_playground) 的 **「设置 → API 配置 → 供应商类型 → 创建自定义供应商 → AI 一键生成与导入」** 中粘贴第三方 API 文档生成配置，再复制该配置的导入链接作为预置值。
+- **AI 生成**：在本站的 **「设置 → API 配置 → 供应商类型 → 创建自定义供应商 → AI 一键生成与导入」** 中粘贴第三方 API 文档生成配置，再复制该配置的导入链接作为预置值。
 - **手动生成**：将 [自定义供应商 LLM 提示词](docs/custom-provider-llm-prompt.md) 和第三方 API 文档发给任意 LLM，获取完整 JSON。
 
 **完整 JSON 示例（异步任务供应商）**
