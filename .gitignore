@@ -11,3 +11,8 @@ src-tauri/dev-data/
 # 开发版更改数据目录时写入的指向文件和迁移标记
 src-tauri/data-dir*
 src-tauri/dev-downloads/
+
+# 站点代理真实配置：含真实 KEY，只留在本地/服务器，绝不入库
+deploy/relay/api-target.conf
+deploy/relay/image-allow.conf
+relay/

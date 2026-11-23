@@ -408,6 +408,8 @@ npm run build
 
 本版本在 Nginx 层加了一层「假 KEY 校验 + 真 KEY 注入」：站点对访客开箱即用，而访客在前端既看不到中转站信息，也拿不到可用的真实 KEY。图片与文本两条通道都支持，且可以分别指向不同服务商。
 
+> 完整的服务器部署、挂载、升级与排错步骤见 [`deploy/DEPLOY-DOCKER.md`](deploy/DEPLOY-DOCKER.md)。
+
 ```
 浏览器 ──「假地址 + 假 KEY」──▶ 本站 Nginx ──「真实上游 + 真实 KEY」──▶ 服务商
                                 │
