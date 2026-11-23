@@ -19,7 +19,7 @@
 
 ## 🔧 自用修改版说明
 
-本项目是 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 的自用修改版，版本号形如 `v0.9.0-tjsky.2`：前半段跟随所基于的上游版本，后半段是本仓库自己的修订号。核心功能与架构由原作者开发，本仓库只改造部署与代理相关部分：
+本项目是 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 的自用修改版，版本号形如 `v0.9.0-tjsky.3`：前半段跟随所基于的上游版本，后半段是本仓库自己的修订号。核心功能与架构由原作者开发，本仓库只改造部署与代理相关部分：
 
 - **双层脱敏 API 代理**：前端只持有「假 API 地址 + 假 KEY」，真实上游与真实 KEY 只存在于容器内；Nginx 校验假 KEY 后注入真 KEY 转发，访客在前端看不到任何中转站信息。
 - **图片下载中转**：中转站返回图片 URL 时改走本站 `/image-proxy/` 下载，绕开浏览器跨域限制，并带域名白名单防 SSRF。目标 URL 由请求头 `X-Image-URL` 传递（Nginx 会原样透传查询串，带 `&` 的签名 URL 会被截断）。

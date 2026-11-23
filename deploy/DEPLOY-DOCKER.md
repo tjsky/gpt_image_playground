@@ -197,7 +197,7 @@ docker compose logs --tail=20
 
 ```bash
 docker compose down
-# .env 里把 image 改成带版本号的 tag，例如 :v0.9.0-tjsky.2
+# .env 里把 image 改成带版本号的 tag，例如 :v0.9.0-tjsky.3
 docker compose up -d
 ```
 
