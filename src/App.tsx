@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import type { SkillInfo } from './types'
 import { initStore, useStore } from './store'
 import { clearUrlSettingParams, hasUrlSettingParams } from './lib/urlSettings'
-import { createDefaultOpenAIProfile, hasDefaultPresetConfig, isAgentTextApiProfile, normalizeSettings } from './lib/apiProfiles'
+import { createDefaultOpenAIProfile, createDefaultTextProfile, hasDefaultPresetConfig, hasDefaultTextProfile, isAgentTextApiProfile, normalizeSettings } from './lib/apiProfiles'
 import { getCustomProviderConfigUrl, hasEmbeddedDefaultConfig, loadCustomProviderSettingsFromUrl, loadEmbeddedDefaultConfig } from './lib/customProviderConfigUrl'
 import { getDefaultPresetProfileId, getPresetProfileIds, isPresetConfigOnlyEnabled, setPresetConfig } from './lib/presetConfig'
 import { useDockerApiUrlMigrationNotice } from './hooks/useDockerApiUrlMigrationNotice'
@@ -180,7 +180,10 @@ export default function App() {
           : hasDefaultPresetConfig()
             ? {
                 customProviders: [],
-                profiles: [{ ...createDefaultOpenAIProfile(), isDefault: true }],
+                profiles: [
+                  { ...createDefaultOpenAIProfile(), isDefault: true },
+                  ...(hasDefaultTextProfile() ? [createDefaultTextProfile()] : []),
+                ],
               }
             : null
         setPresetConfig(importedSettings)

@@ -8,6 +8,8 @@ import { useTooltip } from '../hooks/useTooltip'
 export interface SelectOption {
   label: string
   value: string | number
+  /** 选中后显示在触发器里的文案；缺省时用 label（用于 label 带说明、触发器只显示精简内容的场景） */
+  triggerLabel?: string
   /** 选项文字的样式，如用对应字体渲染字体名 */
   style?: CSSProperties
   variant?: 'action' | 'danger'
@@ -174,11 +176,11 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
           disabled ? '!opacity-50 !cursor-not-allowed !bg-gray-100/50 dark:!bg-white/[0.05]' : ''
         }`}
       >
-        <span className="truncate">{prefix}<span style={selectedOption?.style}>{selectedOption?.label ?? value}</span></span>
+        <span className="truncate">{prefix}<span style={selectedOption?.style}>{selectedOption?.triggerLabel ?? selectedOption?.label ?? value}</span></span>
         <ChevronDownIcon className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         {showValueTooltips && (
           <ViewportTooltip visible={triggerTooltip.visible} className="max-w-[300px] break-words whitespace-pre-wrap">
-            {selectedOption?.label ?? value}
+            {selectedOption?.triggerLabel ?? selectedOption?.label ?? value}
           </ViewportTooltip>
         )}
       </div>

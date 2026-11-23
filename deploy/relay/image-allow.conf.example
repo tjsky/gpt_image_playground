@@ -1,0 +1,17 @@
+# ============================================================
+# 图片下载代理的域名白名单（可选，但生产环境强烈建议）
+# ============================================================
+# 用法：复制到宿主机，挂载到
+#   ./relay/image-allow.conf:/etc/nginx/relay/image-allow.conf:ro
+#
+# 作用：/image-proxy/ 只允许代理这些域名下的图片，其余一律 403。
+#      不配置时仅拦截非 https 与内网地址字面量（127./10./192.168./169.254. 等）。
+#
+# 注意：变量名是 $image_target（模板从请求头 X-Image-URL 或 ?url= 取值），
+#      不要写成 $arg_url，否则请求头方式会被全部拒绝。
+#
+# 写法：一个 if，正则里用 | 分隔中转站的图片 CDN 域名。
+
+if ($image_target !~* "^https://([A-Za-z0-9-]+\.)*(cdn\.relay-a\.example\.com|files\.relay-b\.example\.com)/") {
+    return 403 "Image host not allowed";
+}

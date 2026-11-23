@@ -8,6 +8,7 @@ import { hasActiveDataOperations, trackDataTransfer } from '../lib/dataOperation
 import { useSettingsDataTransfer } from '../lib/dataProgress'
 import { isApiProxyAvailable, isApiProxyLocked, readClientDevProxyConfig } from '../lib/devProxy'
 import { DEFAULT_SVG_MODEL, getEffectiveImageGenerationModel, getImageModelFamily, isGptImage26PlusModel } from '../lib/imageModels'
+import { resolveSvgModel } from '../lib/svgModel'
 import { isTauri } from '../lib/platform'
 import { useStore, exportData, importData, clearData, type SettingsTab } from '../store'
 import {
@@ -139,9 +140,9 @@ function isPristineNewOpenAIProfile(profile: ApiProfile) {
   return profile.name === '新配置' &&
     profile.provider === 'openai' &&
     profile.baseUrl === DEFAULT_SETTINGS.baseUrl &&
-    profile.apiKey === '' &&
-    profile.model === DEFAULT_IMAGES_MODEL &&
-    profile.imageGenerationModel === DEFAULT_IMAGES_MODEL &&
+    profile.apiKey === defaultProfile.apiKey &&
+    profile.model === defaultProfile.model &&
+    profile.imageGenerationModel === defaultProfile.imageGenerationModel &&
     !profile.svgModel &&
     !profile.svgReasoningEffort &&
     profile.timeout === DEFAULT_SETTINGS.timeout &&
@@ -1671,7 +1672,7 @@ export default function SettingsModal() {
                       onBlur={(e) => commitActiveProfilePatch({ svgModel: e.target.value.trim() || undefined })}
                       type="text"
                       disabled={activeProfileLocked}
-                      placeholder={activeProfile.provider === 'fal' ? '留空使用接口默认模型' : isResponsesProfile ? '留空使用 Responses 模型' : DEFAULT_SVG_MODEL}
+                      placeholder={activeProfile.provider === 'fal' ? '留空使用接口默认模型' : isResponsesProfile ? '留空使用 Responses 模型' : resolveSvgModel(activeProfile, draft)}
                       className="w-full rounded-xl border border-transparent bg-black/[0.04] px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:bg-white/[0.06] dark:text-gray-200 dark:focus:border-blue-500/50"
                     />
                     <div data-selectable-text className="mt-1.5 text-xs leading-6 text-gray-500 dark:text-gray-500">
@@ -1679,7 +1680,7 @@ export default function SettingsModal() {
                         ? '输出 SVG 时，图像模型先生成位图，再由文本模型转换为矢量图。'
                         : <>输出 SVG 时，图像模型先生成位图，再由该文本模型编写 SVG，其 token 用量另行计费。{isResponsesProfile
                           ? '留空时不指定 SVG 编写模型，由接口使用 Responses 模型或默认编写模型。'
-                          : <>留空时使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_SVG_MODEL}</code>。</>}</>}
+                          : <>留空时优先使用 <strong>Agent 配置中的文本模型</strong>，未启用 Agent 时使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_SVG_MODEL}</code>。</>}</>}
                     </div>
                   </label>
                   {activeProfile.provider !== 'fal' && (

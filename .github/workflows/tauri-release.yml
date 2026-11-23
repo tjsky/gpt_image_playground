@@ -1,9 +1,8 @@
 name: Build Desktop Client
 
-# 只由推送 v* tag 触发，构建最新及以后的版本；不提供为已有 tag 手动重新构建的入口
+# 本仓库只发布 Docker 镜像，桌面客户端不参与发版：改为仅手动触发，推送 tag 不再自动构建
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write

@@ -25,18 +25,28 @@ import { readRuntimeEnv } from './runtimeEnv'
 import { isTauri } from './platform'
 import { isImportableConfigUrl } from './importableConfigUrl'
 import { DEFAULT_IMAGES_MODEL, getImageModelFamily } from './imageModels'
+import { DEFAULT_IMAGE_MODEL, getPrimaryImageModel } from './imageModelNotes'
 import { DEFAULT_BATCH_PROMPT_CONCURRENCY, normalizeBatchPromptConcurrency } from './batchPrompts'
 import { normalizeFontMode } from './fonts'
 import { DEFAULT_PRIVACY_MODE_SHORTCUT, normalizeShortcutSetting } from './keyboardShortcut'
 
 const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
+// 前端展示用的「假 KEY」：只用于 Nginx 侧校验站点代理，泄露也无价值；真实 KEY 只在容器内
+const DEFAULT_API_KEY = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_KEY)
+// 预置的文本配置（Agent 文本模型）；留空表示不预置，Agent 由用户自行配置
+const DEFAULT_TEXT_MODEL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_TEXT_MODEL)
+const DEFAULT_TEXT_MODEL_NAME = readRuntimeEnv(import.meta.env.VITE_DEFAULT_TEXT_MODEL_NAME)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
 const DOCKER_DEPLOYMENT = readRuntimeEnv(import.meta.env.VITE_DOCKER_DEPLOYMENT) === 'true'
 const DEFAULT_API_URL_PATCH = isImportableConfigUrl(RAW_DEFAULT_API_URL)
   ? null
   : parseDefaultApiUrl(RAW_DEFAULT_API_URL || (DOCKER_DEPLOYMENT && DEFAULT_OPENAI_API_PROXY ? '' : OPENAI_DEFAULT_BASE_URL))
 const DEFAULT_BASE_URL = DEFAULT_API_URL_PATCH?.baseUrl ?? ''
+/** 新建 / 重置为默认配置时使用的生图模型：部署端可覆盖，留空用内置默认；可用逗号分隔多个 */
+export const DEFAULT_PROFILE_IMAGE_MODEL = normalizeModelList(DEFAULT_IMAGE_MODEL) || DEFAULT_IMAGES_MODEL
+/** Responses 的 image_generation 工具只能填单个模型，取默认列表的第一项 */
+export const DEFAULT_PROFILE_IMAGE_TOOL_MODEL = getPrimaryImageModel(DEFAULT_PROFILE_IMAGE_MODEL) || DEFAULT_IMAGES_MODEL
 export { DEFAULT_IMAGES_MODEL } from './imageModels'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-6.1-sol'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
@@ -413,9 +423,9 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     name: DEFAULT_API_URL_PATCH?.name ?? '默认',
     provider: 'openai',
     baseUrl: DEFAULT_BASE_URL,
-    apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? '',
-    model: DEFAULT_API_URL_PATCH?.model ?? (apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_IMAGES_MODEL),
-    imageGenerationModel: DEFAULT_API_URL_PATCH?.imageGenerationModel ?? DEFAULT_IMAGES_MODEL,
+    apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? DEFAULT_API_KEY,
+    model: DEFAULT_API_URL_PATCH?.model ?? (apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_PROFILE_IMAGE_MODEL),
+    imageGenerationModel: DEFAULT_API_URL_PATCH?.imageGenerationModel ?? DEFAULT_PROFILE_IMAGE_TOOL_MODEL,
     timeout: DEFAULT_API_URL_PATCH?.timeout ?? DEFAULT_API_TIMEOUT,
     svgModel: DEFAULT_API_URL_PATCH?.svgModel,
     svgReasoningEffort: DEFAULT_API_URL_PATCH?.svgReasoningEffort,
@@ -429,6 +439,27 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     apiMode,
     streamImages,
   }
+}
+
+export const DEFAULT_TEXT_PROFILE_ID = 'default-text'
+
+/** 预置文本配置是否存在（由 DEFAULT_TEXT_MODEL 决定） */
+export function hasDefaultTextProfile(): boolean {
+  return Boolean(DEFAULT_TEXT_MODEL)
+}
+
+/**
+ * 预置的「文本」配置：与默认生图配置共用同一个假 KEY 与本站代理，
+ * 仅 model 与 apiMode 不同。站点代理按请求头 X-Api-Kind: text 决定用哪套真实 KEY。
+ */
+export function createDefaultTextProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
+  return createDefaultOpenAIProfile({
+    id: DEFAULT_TEXT_PROFILE_ID,
+    name: DEFAULT_TEXT_MODEL_NAME || '默认（文本）',
+    model: DEFAULT_TEXT_MODEL,
+    apiMode: 'responses',
+    ...overrides,
+  })
 }
 
 export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
@@ -513,7 +544,7 @@ export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvi
       ...profile,
       provider: customProvider.id,
       baseUrl: savedDraft?.baseUrl ?? (shouldUseOpenAIDefaults ? DEFAULT_BASE_URL : profile.baseUrl || DEFAULT_BASE_URL),
-      model: savedDraft?.model ?? (shouldUseOpenAIDefaults ? DEFAULT_IMAGES_MODEL : profile.model || DEFAULT_IMAGES_MODEL),
+      model: savedDraft?.model ?? (shouldUseOpenAIDefaults ? DEFAULT_PROFILE_IMAGE_MODEL : profile.model || DEFAULT_PROFILE_IMAGE_MODEL),
       imageGenerationModel: savedDraft?.imageGenerationModel ?? profile.imageGenerationModel,
       apiMode: 'images',
       reasoningEffort: savedDraft?.reasoningEffort,
@@ -539,7 +570,7 @@ export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvi
     ...profile,
     provider,
     baseUrl: savedDraft?.baseUrl ?? DEFAULT_BASE_URL,
-    model: savedDraft?.model ?? DEFAULT_IMAGES_MODEL,
+    model: savedDraft?.model ?? DEFAULT_PROFILE_IMAGE_MODEL,
     imageGenerationModel: savedDraft?.imageGenerationModel ?? profile.imageGenerationModel,
     apiMode: nextApiMode,
     reasoningEffort: savedDraft?.reasoningEffort ?? profile.reasoningEffort,
@@ -745,7 +776,7 @@ export function normalizeSettings(input: Partial<AppSettings> | unknown): AppSet
   const legacyApiMode: ApiMode = record.apiMode === 'responses' ? 'responses' : 'images'
   const legacyProfile = normalizeApiProfile({
     baseUrl: typeof record.baseUrl === 'string' ? record.baseUrl : DEFAULT_BASE_URL,
-    apiKey: typeof record.apiKey === 'string' ? record.apiKey : '',
+    apiKey: typeof record.apiKey === 'string' ? record.apiKey : DEFAULT_API_KEY,
     model: record.model,
     imageGenerationModel: record.imageGenerationModel,
     timeout: typeof record.timeout === 'number' && Number.isFinite(record.timeout) ? record.timeout : DEFAULT_API_TIMEOUT,
@@ -1073,9 +1104,9 @@ function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
     profile.name === '默认' &&
     profile.provider === 'openai' &&
     profile.baseUrl === DEFAULT_BASE_URL &&
-    profile.apiKey === '' &&
-    profile.model === DEFAULT_IMAGES_MODEL &&
-    profile.imageGenerationModel === DEFAULT_IMAGES_MODEL &&
+    profile.apiKey === DEFAULT_API_KEY &&
+    profile.model === DEFAULT_PROFILE_IMAGE_MODEL &&
+    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_TOOL_MODEL &&
     profile.timeout === DEFAULT_API_TIMEOUT &&
     profile.apiMode === 'images' &&
     profile.reasoningEffort === undefined &&
@@ -1451,10 +1482,12 @@ export function mergePresetImportedSettings(
 }
 
 export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
-  profiles: [createDefaultOpenAIProfile()],
+  profiles: hasDefaultTextProfile()
+    ? [createDefaultOpenAIProfile(), createDefaultTextProfile()]
+    : [createDefaultOpenAIProfile()],
   baseUrl: DEFAULT_BASE_URL,
   apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? '',
-  model: DEFAULT_API_URL_PATCH?.model ?? (DEFAULT_API_URL_PATCH?.apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_IMAGES_MODEL),
+  model: DEFAULT_API_URL_PATCH?.model ?? (DEFAULT_API_URL_PATCH?.apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_PROFILE_IMAGE_MODEL),
   timeout: DEFAULT_API_TIMEOUT,
   apiMode: DEFAULT_API_URL_PATCH?.apiMode ?? 'images',
   codexCli: DEFAULT_API_URL_PATCH?.codexCli ?? false,
@@ -1487,7 +1520,7 @@ export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
   agentMaxToolRounds: DEFAULT_AGENT_MAX_TOOL_ROUNDS,
   agentWebSearch: false,
   agentMathFormattingPrompt: true,
-  agentApiConfigMode: 'off',
+  agentApiConfigMode: hasDefaultTextProfile() ? 'hybrid' : 'off',
   agentTextProfileId: null,
   agentImageProfileId: null,
 })

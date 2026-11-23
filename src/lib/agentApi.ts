@@ -103,14 +103,16 @@ const AGENT_TITLE_INSTRUCTIONS = [
 
 const AGENT_TITLE_MAX_LENGTH = 28
 
-function createHeaders(profile: ApiProfile): Record<string, string> {
+function createHeaders(profile: ApiProfile, apiKind: 'image' | 'text' = 'image'): Record<string, string> {
   return {
     Authorization: `Bearer ${profile.apiKey}`,
     'Content-Type': 'application/json',
+    // 告诉站点代理这条请求该用图像 KEY 还是文本 KEY（未部署代理时该头无副作用）
+    'X-Api-Kind': apiKind,
   }
 }
 
-function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: string): Record<string, unknown> {
+function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: string, settings?: Partial<AppSettings> | null): Record<string, unknown> {
   const tool: Record<string, unknown> = {
     type: 'image_generation',
     action: 'auto',
@@ -125,7 +127,7 @@ function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: 
     tool.moderation = params.moderation
   }
 
-  applyGptImage26Params(tool, params, profile)
+  applyGptImage26Params(tool, params, profile, settings)
 
   if (params.output_format !== 'png' && params.output_compression != null) {
     tool.output_compression = params.output_compression
@@ -175,7 +177,7 @@ function createGenerateImageFunctionTool() {
 function createAgentTools(params: TaskParams, profile: ApiProfile, settings: AppSettings, maskDataUrl?: string): Array<Record<string, unknown>> {
   const tools: Array<Record<string, unknown>> = settings.agentApiConfigMode === 'hybrid'
     ? [createGenerateImageFunctionTool()]
-    : [createImageTool(params, profile, maskDataUrl)]
+    : [createImageTool(params, profile, maskDataUrl, settings)]
   const singleImageToolInstruction = settings.agentApiConfigMode === 'hybrid'
     ? 'For single images or prerequisite/base images, use the generate_image tool instead.'
     : 'For single images or prerequisite/base images, use the built-in image_generation tool instead.'
@@ -633,7 +635,8 @@ export async function callAgentResponsesApi(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      // 混合模式下这个 profile 只负责文本（图像由 imageProfile 单独发起）；原生模式下它与图像共用同一 KEY
+      headers: createHeaders(profile, imageProfile ? 'text' : 'image'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -698,7 +701,7 @@ export async function callAgentConversationTitleApi(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      headers: createHeaders(profile, 'text'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -742,12 +745,14 @@ export async function callBatchImageSingle(opts: {
   referenceImageDataUrls: string[]
   referenceIds?: string[]
   allowPromptRewrite?: boolean
+  /** 用于解析 SVG 编写模型（留空时取 Agent 文本模型） */
+  settings?: Partial<AppSettings> | null
   signal?: AbortSignal
   onImageToolStarted?: () => void | Promise<void>
   onPartialImage?: (event: { image: string; partialImageIndex?: number }) => void | Promise<void>
   onImageToolCompleted?: (image: AgentApiResultImage) => void | Promise<void>
 }): Promise<BatchImageCallResult> {
-  const { profile, params, batchItemId, prompt, referenceImageDataUrls, referenceIds, allowPromptRewrite, signal, onImageToolStarted, onPartialImage, onImageToolCompleted } = opts
+  const { profile, params, batchItemId, prompt, referenceImageDataUrls, referenceIds, allowPromptRewrite, settings, signal, onImageToolStarted, onPartialImage, onImageToolCompleted } = opts
   assertInputImageLimit(profile, referenceImageDataUrls.length)
   const mime = MIME_MAP[params.output_format] || 'image/png'
   const proxyConfig = readClientDevProxyConfig()
@@ -792,7 +797,7 @@ export async function callBatchImageSingle(opts: {
       tool.quality = params.quality
       tool.moderation = params.moderation
     }
-    applyGptImage26Params(tool, params, profile)
+    applyGptImage26Params(tool, params, profile, settings)
     if (params.output_format !== 'png' && params.output_compression != null) {
       tool.output_compression = params.output_compression
     }
@@ -813,7 +818,7 @@ export async function callBatchImageSingle(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      headers: createHeaders(profile, 'image'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,

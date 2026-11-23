@@ -1,6 +1,7 @@
 import { OUTPUT_FORMATS, type ApiProfile, type AppSettings, type ImageSearchGrounding, type ResponsesOutputItem, type TaskParams, type TaskRecord } from '../types'
 import { blobToDataUrl } from './dataUrl'
 import { DEFAULT_SVG_MODEL } from './imageModels'
+import { resolveSvgModel } from './svgModel'
 import { apiFetch, isTauri } from './platform'
 
 export const MIME_MAP: Record<string, string> = {
@@ -12,11 +13,24 @@ export const MIME_MAP: Record<string, string> = {
 }
 
 /** GPT Image 2.6 的 complexity、SVG 和 GIF 字段；Images API 生成请求和 Responses 图像工具格式相同 */
-export function applyGptImage26Params(target: Record<string, unknown>, params: TaskParams, profile: ApiProfile) {
+export function applyGptImage26Params(
+  target: Record<string, unknown>,
+  params: TaskParams,
+  profile: ApiProfile,
+  settings?: Partial<AppSettings> | null,
+) {
   if (profile.codexCli && profile.provider !== 'fal') return
   if (params.complexity !== 'auto') target.complexity = params.complexity
   if (params.output_format === 'svg') {
-    const model = profile.svgModel?.trim() || (target.type === 'image_generation' ? undefined : DEFAULT_SVG_MODEL)
+    const explicit = profile.svgModel?.trim()
+    // image_generation 工具留空时不传该字段，由接口使用 Responses 模型（上游 0.9.5 行为）；
+    // fal 留空用内置默认；其余（Images API / 自定义供应商）回落到 Agent 文本模型。
+    const model = explicit
+      || (target.type === 'image_generation'
+        ? undefined
+        : profile.provider === 'fal'
+          ? DEFAULT_SVG_MODEL
+          : resolveSvgModel(profile, settings))
     if (model || profile.svgReasoningEffort) {
       target.svg = {
         ...(model ? { model } : {}),
@@ -199,20 +213,41 @@ async function probeNoCorsReachability(url: string, timeoutMs = 8000): Promise<'
   }
 }
 
-export async function fetchImageUrlAsDataUrl(url: string, fallbackMime: string, signal?: AbortSignal): Promise<string> {
+/**
+ * 本站图片中转地址。目标 URL 通过请求头 X-Image-URL 传递：
+ * 放在查询串里会被 Nginx 原样透传（不解码），带 & 的签名 URL 会被截断。
+ */
+export function buildSiteImageProxyUrl(): string {
+  return `${window.location.origin}/image-proxy/`
+}
+
+/**
+ * @param viaImageProxy 图片是否来自本站 API 代理返回；为 true 时改走 /image-proxy/ 下载
+ */
+export async function fetchImageUrlAsDataUrl(
+  url: string,
+  fallbackMime: string,
+  signal?: AbortSignal,
+  viaImageProxy = false,
+): Promise<string> {
   if (isDataUrl(url)) return url
+
+  const useImageProxy = viaImageProxy && isHttpUrl(url)
+  const targetUrl = useImageProxy ? buildSiteImageProxyUrl() : url
+  const headers = useImageProxy ? { 'X-Image-URL': url } : undefined
 
   let response: Response
   try {
-    response = await apiFetch(url, {
+    response = await apiFetch(targetUrl, {
       cache: 'no-store',
       signal,
+      headers,
     })
   } catch (err) {
     if (err instanceof TypeError) {
       // 客户端由 Rust 侧发出请求，不存在跨域问题，也不需要 no-cors 探测
       if (isTauri) throw new Error(`图片链接下载失败（可能因链接过期或网络异常）。${IMAGE_FETCH_CORS_HINT}`)
-      const probe = await probeNoCorsReachability(url)
+      const probe = await probeNoCorsReachability(targetUrl)
       if (probe === 'opaque') {
         throw new Error(`图片已生成，但因服务商未允许跨域，图片链接下载失败。${IMAGE_FETCH_CORS_HINT}`)
       }

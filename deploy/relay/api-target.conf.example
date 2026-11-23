@@ -1,0 +1,38 @@
+# ============================================================
+# 站点 API 代理的「真实上游 + 真实 KEY」
+# ============================================================
+# 用法：复制本文件到宿主机（建议 chmod 600、不要提交到 git），
+#       在 docker-compose 里挂载到：
+#         ./relay/api-target.conf:/etc/nginx/relay/api-target.conf:ro
+#       挂载后容器启动脚本不会再用环境变量生成，改完执行：
+#         docker compose exec gpt-image-playground nginx -s reload
+#
+# 本文件只定义变量，由 deploy/nginx.conf 决定怎么用：
+#   - 图像请求（/api-proxy/images/*、以及不带 X-Api-Kind 的 responses）→ $relay_image_*
+#   - 文本请求（Agent 主对话、标题生成，带 X-Api-Kind: text）      → $relay_text_*
+# 地址末尾的 / 必须保留：Nginx 用它替换 /api-proxy/ 前缀。
+
+# ---- 情况 ① 两个 KEY：生图用一个站，文本用另一个站 ----
+# 按下面四行填写即可。
+
+set $relay_image_pass "https://cf.api.fan/v1/";
+set $relay_image_auth "Bearer sk-把这里换成生图KEY";
+
+set $relay_text_pass "https://api.deepseek.com/v1/";
+set $relay_text_auth "Bearer sk-把这里换成文本KEY";
+
+# ---- 情况 ② 一个 KEY：同一服务商既生图又能文本 ----
+# 把文本两行留空，nginx 会自动回落到图像上游（文本请求即用生图 KEY）。
+# 若该服务商只支持生图，请勿把用户切到「原生 Agent 模式」——
+# 原生模式要求同一 KEY 能返回 Responses 文本，只有混合模式才支持分 KEY。
+
+# set $relay_text_pass "";
+# set $relay_text_auth "";
+
+# ------------------------------------------------------------
+# 多中转站管理：一份配置一个文件，用软链接切换（零重启成本）
+#   relay/api-target.a.conf   → 中转站 A
+#   relay/api-target.b.conf   → 中转站 B
+#   ln -sfn api-target.a.conf relay/api-target.conf
+#   docker compose exec gpt-image-playground nginx -s reload
+# ------------------------------------------------------------

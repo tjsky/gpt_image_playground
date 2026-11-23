@@ -5,6 +5,7 @@ import { dismissAllTooltips } from '../../lib/tooltipDismiss'
 import { usePopoverDismiss } from '../../hooks/usePopoverDismiss'
 import { ChevronDownIcon, SearchIcon, SettingsIcon } from '../icons'
 import { CHIP_BASE_CLASS, CHIP_IDLE_CLASS } from './paramPopoverChip'
+import { formatImageModelLabel } from '../../lib/imageModelNotes'
 import ViewportTooltip from '../ViewportTooltip'
 
 const PANEL_MAX_WIDTH = 340
@@ -208,10 +209,10 @@ export default function ModelPicker({ value, groups, activeProfileId, canSwitchP
                             : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.06]'
                         }`}
                       >
-                        <span className="min-w-0 truncate">{model}</span>
+                        <span className="min-w-0 truncate">{formatImageModelLabel(model)}</span>
                         {current && <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500" />}
                         <ViewportTooltip visible={hoveredModel === key} className="max-w-[300px] break-words whitespace-pre-wrap">
-                          {model}
+                          {formatImageModelLabel(model)}
                         </ViewportTooltip>
                       </button>
                     )
