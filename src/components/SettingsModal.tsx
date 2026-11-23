@@ -17,6 +17,7 @@ import {
   DEFAULT_FAL_MODEL,
   DEFAULT_IMAGES_MODEL,
   DEFAULT_PROFILE_IMAGE_MODEL,
+  DEFAULT_PROFILE_IMAGE_TOOL_MODEL,
   DEFAULT_RESPONSES_MODEL,
   DEFAULT_SETTINGS,
   findEquivalentApiProfile,
@@ -141,7 +142,7 @@ function isPristineNewOpenAIProfile(profile: ApiProfile) {
     profile.baseUrl === DEFAULT_SETTINGS.baseUrl &&
     profile.apiKey === '' &&
     profile.model === DEFAULT_PROFILE_IMAGE_MODEL &&
-    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_MODEL &&
+    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_TOOL_MODEL &&
     !profile.svgModel &&
     profile.timeout === DEFAULT_SETTINGS.timeout &&
     profile.apiMode === 'images' &&

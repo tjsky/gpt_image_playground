@@ -24,7 +24,7 @@ import { normalizeReasoningEffort, normalizeStreamPartialImages, parseDefaultApi
 import { readRuntimeEnv } from './runtimeEnv'
 import { isImportableConfigUrl } from './importableConfigUrl'
 import { DEFAULT_IMAGES_MODEL, getImageModelFamily } from './imageModels'
-import { DEFAULT_IMAGE_MODEL } from './imageModelNotes'
+import { DEFAULT_IMAGE_MODEL, getPrimaryImageModel } from './imageModelNotes'
 import { DEFAULT_BATCH_PROMPT_CONCURRENCY, normalizeBatchPromptConcurrency } from './batchPrompts'
 import { normalizeFontMode } from './fonts'
 import { DEFAULT_PRIVACY_MODE_SHORTCUT, normalizeShortcutSetting } from './keyboardShortcut'
@@ -42,8 +42,10 @@ const DEFAULT_API_URL_PATCH = isImportableConfigUrl(RAW_DEFAULT_API_URL)
   ? null
   : parseDefaultApiUrl(RAW_DEFAULT_API_URL || (DOCKER_DEPLOYMENT && DEFAULT_OPENAI_API_PROXY ? '' : OPENAI_DEFAULT_BASE_URL))
 const DEFAULT_BASE_URL = DEFAULT_API_URL_PATCH?.baseUrl ?? ''
-/** 新建 / 重置为默认配置时使用的生图模型：部署端可覆盖，留空用内置默认 */
+/** 新建 / 重置为默认配置时使用的生图模型：部署端可覆盖，留空用内置默认；可用逗号分隔多个 */
 export const DEFAULT_PROFILE_IMAGE_MODEL = DEFAULT_IMAGE_MODEL || DEFAULT_IMAGES_MODEL
+/** Responses 的 image_generation 工具只能填单个模型，取默认列表的第一项 */
+export const DEFAULT_PROFILE_IMAGE_TOOL_MODEL = getPrimaryImageModel(DEFAULT_PROFILE_IMAGE_MODEL) || DEFAULT_IMAGES_MODEL
 export { DEFAULT_IMAGES_MODEL } from './imageModels'
 export const DEFAULT_RESPONSES_MODEL = 'gpt-6.1-sol'
 export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
@@ -400,7 +402,7 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
     baseUrl: DEFAULT_BASE_URL,
     apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? DEFAULT_API_KEY,
     model: DEFAULT_API_URL_PATCH?.model ?? (apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_PROFILE_IMAGE_MODEL),
-    imageGenerationModel: DEFAULT_API_URL_PATCH?.imageGenerationModel ?? DEFAULT_PROFILE_IMAGE_MODEL,
+    imageGenerationModel: DEFAULT_API_URL_PATCH?.imageGenerationModel ?? DEFAULT_PROFILE_IMAGE_TOOL_MODEL,
     timeout: DEFAULT_API_TIMEOUT,
     reasoningEffort: DEFAULT_API_URL_PATCH?.reasoningEffort,
     codexCli: DEFAULT_API_URL_PATCH?.codexCli ?? false,
@@ -1038,7 +1040,7 @@ function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
     profile.baseUrl === DEFAULT_BASE_URL &&
     profile.apiKey === DEFAULT_API_KEY &&
     profile.model === DEFAULT_PROFILE_IMAGE_MODEL &&
-    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_MODEL &&
+    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_TOOL_MODEL &&
     profile.timeout === DEFAULT_API_TIMEOUT &&
     profile.apiMode === 'images' &&
     profile.reasoningEffort === undefined &&

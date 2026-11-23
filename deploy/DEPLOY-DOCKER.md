@@ -48,7 +48,8 @@ DEFAULT_API_KEY=sk-fake-change-me
 
 # 预置文本模型：设了访客开箱即用 Agent（混合模式已预选好），留空则不预置
 # 默认生图模型与模型注释（只影响前端展示）
-DEFAULT_IMAGE_MODEL=gpt-image-2.6-flare
+# 可用分号分隔多个模型，默认选第一个，其余在首页下拉切换
+DEFAULT_IMAGE_MODEL=gpt-image-2.6-flare;gpt-image-2.6-sunburst
 IMAGE_MODEL_NOTES=gpt-image-2.6-sunburst=顶级模型;gpt-image-2.6-flare=正常模型，适合日常使用
 
 DEFAULT_TEXT_MODEL=deepseek-flash
@@ -146,8 +147,8 @@ docker compose exec gpt-image-playground nginx -t   # 应为 successful
 | `TEXT_API_URL` / `TEXT_API_KEY` | 否 | 文本上游；两个都不给 = 复用生图上游 |
 | `DEFAULT_TEXT_MODEL` | 否 | 预置文本配置的模型名，设置后新访客开箱即用 Agent |
 | `DEFAULT_TEXT_MODEL_NAME` | 否 | 预置文本配置的显示名，默认「默认（文本）」 |
-| `DEFAULT_IMAGE_MODEL` | 否 | 默认生图模型，留空用内置 `gpt-image-2.6-sunburst` |
-| `IMAGE_MODEL_NOTES` | 否 | 模型注释，`模型名=注释;模型名=注释`，模型名不区分大小写 |
+| `DEFAULT_IMAGE_MODEL` | 否 | 默认生图模型，可用 `;` 分隔多个（默认选第一个），留空用内置 `gpt-image-2.6-sunburst` |
+| `IMAGE_MODEL_NOTES` | 否 | 模型注释，`模型名=注释;模型名=注释`，模型名不区分大小写；注释只在展开的模型下拉里显示 |
 | `IMAGE_PROXY_ALLOW_HOSTS` | 否 | 图片代理域名白名单，逗号分隔 |
 
 改环境变量需要 `docker compose up -d` 重建容器；改 `relay/*.conf` 只需 `reload`（见 §5）。

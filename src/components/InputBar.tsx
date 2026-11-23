@@ -453,7 +453,7 @@ export default function InputBar() {
   const isTemporarilyReusedProfile = activeProfile.id !== currentActiveProfile.id
   const modelOptions = useMemo(() => (
     splitModelList(settings.profiles.find((profile) => profile.id === activeProfile.id)?.model ?? activeProfile.model)
-      .map((model) => ({ label: formatImageModelLabel(model), value: model }))
+      .map((model) => ({ label: formatImageModelLabel(model), value: model, triggerLabel: model }))
   ), [activeProfile.id, activeProfile.model, settings.profiles])
   const handleModelChange = useCallback((model: string) => {
     // 临时复用其他配置时只切换本次复用的模型，不改动该配置记住的选择

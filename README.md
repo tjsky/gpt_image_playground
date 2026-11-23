@@ -147,14 +147,14 @@ services:
 两个部署端变量（只影响前端展示，不含任何凭据）：
 
 ```yaml
-DEFAULT_IMAGE_MODEL: gpt-image-2.6-flare
+DEFAULT_IMAGE_MODEL: gpt-image-2.6-flare;gpt-image-2.6-sunburst
 IMAGE_MODEL_NOTES: gpt-image-2.6-sunburst=顶级模型;gpt-image-2.6-flare=正常模型，适合日常使用
 ```
 
-- `DEFAULT_IMAGE_MODEL` 决定**新建配置**的默认模型；已有配置不会被改动。留空时用内置的 `gpt-image-2.6-sunburst`。
+- `DEFAULT_IMAGE_MODEL` 决定**新建配置**的默认模型列表：用分号分隔多个模型（也接受逗号、换行），**默认选中第一个**，其余可在首页下拉切换。已有配置不会被改动；留空时用内置的 `gpt-image-2.6-sunburst`。
 - `IMAGE_MODEL_NOTES` 用分号分隔条目、等号分隔模型与注释，注释里可以带逗号。模型名**不区分大小写**（`gpt-image-2.6-Flare` 与 `gpt-image-2.6-flare` 共用一条注释）。
-- 命中注释后，首页模型下拉显示为 `gpt-image-2.6-flare （正常模型，适合日常使用）`；下拉选中的值仍是纯模型 ID，注释不会发给接口。
-- 一个配置里可以填多个模型（逗号分隔），下拉会逐个显示并各自匹配注释。
+- 注释**只出现在展开的模型下拉里**（如 `gpt-image-2.6-flare （正常模型，适合日常使用）`）；选中后输入栏只显示纯模型 ID，避免底部输入框被撑长。
+- 下拉选中的值始终是纯模型 ID，注释不会发给接口；一个配置里的每个模型各自匹配注释。
 
 ### 管理中转站（挂载配置文件，reload 生效）
 
@@ -223,7 +223,7 @@ Docker 部署时用去掉 `VITE_` 前缀的同名变量，容器启动时读取�
 
 | 变量 | 说明 |
 |------|------|
-| `DEFAULT_IMAGE_MODEL` | 新建配置的默认生图模型，留空用内置 `gpt-image-2.6-sunburst` |
+| `DEFAULT_IMAGE_MODEL` | 新建配置的默认生图模型，可用 `;` 分隔多个（默认选第一个），留空用内置 `gpt-image-2.6-sunburst` |
 | `IMAGE_MODEL_NOTES` | 模型注释，格式 `模型名=注释;模型名=注释`，模型名不区分大小写 |
 | `DEFAULT_TEXT_MODEL` | 预置文本配置的模型名（如 `deepseek-flash`），设置后新访客开箱即用 Agent |
 | `DEFAULT_TEXT_MODEL_NAME` | 预置文本配置的显示名，默认「默认（文本）」 |
