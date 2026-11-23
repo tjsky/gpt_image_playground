@@ -92,10 +92,15 @@ DEFAULT_MONO_FONT_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$DEFAULT
 BUILTIN_FONT_SOURCE_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$BUILTIN_FONT_SOURCE")")
 # 前端持有的「假 KEY」：只在 Nginx 侧校验用，泄露也无价值；真实 KEY 由 deploy/10-relay-conf.sh 注入
 DEFAULT_API_KEY_ESCAPED=$(escape_sed_replacement "$(escape_js_string "$DEFAULT_API_KEY")")
+# 预置文本配置的模型名（留空则不创建文本配置，Agent 需用户手动配置）
+DEFAULT_TEXT_MODEL_ESCAPED=$(escape_sed_replacement "$(escape_js_string "${DEFAULT_TEXT_MODEL:-}")")
+DEFAULT_TEXT_MODEL_NAME_ESCAPED=$(escape_sed_replacement "$(escape_js_string "${DEFAULT_TEXT_MODEL_NAME:-}")")
 
 # 查找所有 js 文件并将占位符替换为运行时配置
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_API_URL_PLACEHOLDER__|$DEFAULT_API_URL_ESCAPED|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_API_KEY_PLACEHOLDER__|$DEFAULT_API_KEY_ESCAPED|g" {} +
+find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_TEXT_MODEL_PLACEHOLDER__|$DEFAULT_TEXT_MODEL_ESCAPED|g" {} +
+find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DEFAULT_TEXT_MODEL_NAME_PLACEHOLDER__|$DEFAULT_TEXT_MODEL_NAME_ESCAPED|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_API_PROXY_AVAILABLE_PLACEHOLDER__|$API_PROXY_AVAILABLE|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_API_PROXY_LOCKED_PLACEHOLDER__|$API_PROXY_LOCKED|g" {} +
 find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s|__VITE_DOCKER_DEPLOYMENT_PLACEHOLDER__|true|g" {} +

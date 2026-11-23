@@ -32,6 +32,9 @@ const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
 // 前端展示用的「假 KEY」：只用于 Nginx 侧校验站点代理，泄露也无价值；真实 KEY 只在容器内
 const DEFAULT_API_KEY = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_KEY)
+// 预置的文本配置（Agent 文本模型）；留空表示不预置，Agent 由用户自行配置
+const DEFAULT_TEXT_MODEL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_TEXT_MODEL)
+const DEFAULT_TEXT_MODEL_NAME = readRuntimeEnv(import.meta.env.VITE_DEFAULT_TEXT_MODEL_NAME)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
 const DOCKER_DEPLOYMENT = readRuntimeEnv(import.meta.env.VITE_DOCKER_DEPLOYMENT) === 'true'
 const DEFAULT_API_URL_PATCH = isImportableConfigUrl(RAW_DEFAULT_API_URL)
@@ -407,8 +410,28 @@ export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}):
   }
 }
 
-export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
-  return {
+export const DEFAULT_TEXT_PROFILE_ID = 'default-text'
+
+/** 预置文本配置是否存在（由 DEFAULT_TEXT_MODEL 决定） */
+export function hasDefaultTextProfile(): boolean {
+  return Boolean(DEFAULT_TEXT_MODEL)
+}
+
+/**
+ * 预置的「文本」配置：与默认生图配置共用同一个假 KEY 与本站代理，
+ * 仅 model 与 apiMode 不同。站点代理按请求头 X-Api-Kind: text 决定用哪套真实 KEY。
+ */
+export function createDefaultTextProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
+  return createDefaultOpenAIProfile({
+    id: DEFAULT_TEXT_PROFILE_ID,
+    name: DEFAULT_TEXT_MODEL_NAME || '默认（文本）',
+    model: DEFAULT_TEXT_MODEL,
+    apiMode: 'responses',
+    ...overrides,
+  })
+}
+
+export function createDefaultFalProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {  return {
     id: `fal-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
     name: '新配置',
     provider: 'fal',
@@ -1377,7 +1400,9 @@ export function mergePresetImportedSettings(
 }
 
 export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
-  profiles: [createDefaultOpenAIProfile()],
+  profiles: hasDefaultTextProfile()
+    ? [createDefaultOpenAIProfile(), createDefaultTextProfile()]
+    : [createDefaultOpenAIProfile()],
   baseUrl: DEFAULT_BASE_URL,
   apiKey: DEFAULT_API_URL_PATCH?.apiKey ?? '',
   model: DEFAULT_API_URL_PATCH?.model ?? (DEFAULT_API_URL_PATCH?.apiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_IMAGES_MODEL),
@@ -1413,7 +1438,7 @@ export const DEFAULT_SETTINGS: AppSettings = normalizeSettings({
   agentMaxToolRounds: DEFAULT_AGENT_MAX_TOOL_ROUNDS,
   agentWebSearch: false,
   agentMathFormattingPrompt: true,
-  agentApiConfigMode: 'off',
+  agentApiConfigMode: hasDefaultTextProfile() ? 'hybrid' : 'off',
   agentTextProfileId: null,
   agentImageProfileId: null,
 })

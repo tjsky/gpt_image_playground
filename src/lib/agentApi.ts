@@ -102,10 +102,12 @@ const AGENT_TITLE_INSTRUCTIONS = [
 
 const AGENT_TITLE_MAX_LENGTH = 28
 
-function createHeaders(profile: ApiProfile): Record<string, string> {
+function createHeaders(profile: ApiProfile, apiKind: 'image' | 'text' = 'image'): Record<string, string> {
   return {
     Authorization: `Bearer ${profile.apiKey}`,
     'Content-Type': 'application/json',
+    // 告诉站点代理这条请求该用图像 KEY 还是文本 KEY（未部署代理时该头无副作用）
+    'X-Api-Kind': apiKind,
   }
 }
 
@@ -632,7 +634,8 @@ export async function callAgentResponsesApi(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      // 混合模式下这个 profile 只负责文本（图像由 imageProfile 单独发起）；原生模式下它与图像共用同一 KEY
+      headers: createHeaders(profile, imageProfile ? 'text' : 'image'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -697,7 +700,7 @@ export async function callAgentConversationTitleApi(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      headers: createHeaders(profile, 'text'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -812,7 +815,7 @@ export async function callBatchImageSingle(opts: {
 
     const response = await apiFetch(buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy), {
       method: 'POST',
-      headers: createHeaders(profile),
+      headers: createHeaders(profile, 'image'),
       cache: 'no-store',
       body: JSON.stringify(body),
       signal: controller.signal,

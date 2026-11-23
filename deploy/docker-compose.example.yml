@@ -17,10 +17,19 @@ services:
 
       # ---- 后端真实配置（只存在于容器内，不会进入前端产物）----
       # 也可改用挂载 relay/api-target.conf 的方式，二者取其一
-      API_PROXY_URL: ${API_PROXY_URL}
+      # ① 两个 KEY：图像与文本分别用不同的服务商
+      API_PROXY_URL: ${API_PROXY_URL}       # 生图上游，如 https://cf.api.fan/v1
       API_PROXY_KEY: ${API_PROXY_KEY}
+      TEXT_API_URL: ${TEXT_API_URL:-}       # 文本上游，如 https://api.deepseek.com/v1
+      TEXT_API_KEY: ${TEXT_API_KEY:-}       # 留空则文本请求复用上面那套（单 KEY 全能）
+
       # 图片代理域名白名单（可选，逗号分隔）
       IMAGE_PROXY_ALLOW_HOSTS: ${IMAGE_PROXY_ALLOW_HOSTS:-}
+
+      # ② 预置文本配置的模型名：设了访客开箱即用（Agent 混合模式已预选好）
+      # 留空则不预置，访客需自己在设置里加文本配置
+      DEFAULT_TEXT_MODEL: ${DEFAULT_TEXT_MODEL:-}
+      DEFAULT_TEXT_MODEL_NAME: ${DEFAULT_TEXT_MODEL_NAME:-}
 
       ENABLE_API_PROXY: "true"
       # 允许访客改用自己填的 API / KEY，所以不要开启锁定
