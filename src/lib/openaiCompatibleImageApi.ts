@@ -1,4 +1,4 @@
-import { DEFAULT_STREAM_PARTIAL_IMAGES, type ApiProfile, type CustomProviderDefinition, type CustomProviderPollMapping, type CustomProviderResultMapping, type CustomProviderSubmitMapping, type ImageApiResponse, type ImageResponseItem, type ResponsesApiResponse, type ResponsesOutputItem, type TaskParams } from '../types'
+import { DEFAULT_STREAM_PARTIAL_IMAGES, type ApiProfile, type AppSettings, type CustomProviderDefinition, type CustomProviderPollMapping, type CustomProviderResultMapping, type CustomProviderSubmitMapping, type ImageApiResponse, type ImageResponseItem, type ResponsesApiResponse, type ResponsesOutputItem, type TaskParams } from '../types'
 import { dataUrlToBlob, imageDataUrlToPngBlob, maskDataUrlToPngBlob } from './canvasImage'
 import { buildApiUrl, readClientDevProxyConfig, shouldUseApiProxy } from './devProxy'
 import {
@@ -138,6 +138,7 @@ function createResponsesImageTool(
   profile: ApiProfile,
   maskDataUrl?: string,
   nativeTransparentBackground?: boolean,
+  settings?: Partial<AppSettings> | null,
 ): Record<string, unknown> {
   const tool: Record<string, unknown> = {
     type: 'image_generation',
@@ -159,7 +160,7 @@ function createResponsesImageTool(
   if (!profile.codexCli) {
     tool.quality = params.quality
   }
-  applyGptImage26Params(tool, params, profile)
+  applyGptImage26Params(tool, params, profile, settings)
 
   if (params.output_format !== 'png' && params.output_compression != null) {
     tool.output_compression = params.output_compression
@@ -597,7 +598,7 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
       }
       // 与生成接口共用同一份 2.6 参数；编辑接口不支持 SVG，不会出现对象字段
       const gptImage26Params: Record<string, unknown> = {}
-      applyGptImage26Params(gptImage26Params, params, profile)
+      applyGptImage26Params(gptImage26Params, params, profile, opts.settings)
       for (const [key, value] of Object.entries(gptImage26Params)) {
         if (typeof value !== 'object') formData.append(key, String(value))
       }
@@ -675,7 +676,7 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
       if (!profile.codexCli) {
         body.quality = params.quality
       }
-      applyGptImage26Params(body, params, profile)
+      applyGptImage26Params(body, params, profile, opts.settings)
 
       if (params.output_format !== 'png' && params.output_compression != null) {
         body.output_compression = params.output_compression
@@ -782,7 +783,7 @@ function createCustomProviderContext(opts: CallApiOptions, profile: ApiProfile) 
     : sizePrompt
   // 2.6 参数与原生接口同样处理：不适用的字段为 undefined，模板中自动省略
   const gptImage26Params: Record<string, unknown> = {}
-  applyGptImage26Params(gptImage26Params, opts.params, profile)
+  applyGptImage26Params(gptImage26Params, opts.params, profile, opts.settings)
   const params = {
     ...opts.params,
     complexity: undefined,
@@ -1121,7 +1122,7 @@ async function callResponsesImageApiSingle(opts: CallApiOptions, profile: ApiPro
     const body: Record<string, unknown> = {
       model: profile.model,
       input: createResponsesInput(requestPrompt, inputImageDataUrls, opts.settings.allowPromptRewrite),
-      tools: [createResponsesImageTool(params, inputImageDataUrls.length > 0, profile, opts.maskDataUrl, opts.nativeTransparentBackground)],
+      tools: [createResponsesImageTool(params, inputImageDataUrls.length > 0, profile, opts.maskDataUrl, opts.nativeTransparentBackground, opts.settings)],
       tool_choice: 'required',
     }
     if (profile.reasoningEffort) body.reasoning = { effort: profile.reasoningEffort }

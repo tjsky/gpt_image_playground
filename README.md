@@ -357,6 +357,20 @@ npm run build
 
 > 只有「首次访问 / 空本地存储」的用户会得到预置；已有本地设置的老用户不受影响，需要自己在设置里加一份文本配置。
 
+### 默认生图模型与模型注释
+
+两个部署端变量（只影响前端展示，不含任何凭据）：
+
+```yaml
+DEFAULT_IMAGE_MODEL: gpt-image-2.6-flare
+IMAGE_MODEL_NOTES: gpt-image-2.6-sunburst=顶级模型;gpt-image-2.6-flare=正常模型，适合日常使用
+```
+
+- `DEFAULT_IMAGE_MODEL` 决定**新建配置**的默认模型；已有配置不会被改动。留空时仍是内置的 `gpt-image-2.6-sunburst`。
+- `IMAGE_MODEL_NOTES` 用分号分隔条目、等号分隔模型与注释，注释里可以带逗号。模型名**不区分大小写**（`gpt-image-2.6-Flare` 与 `gpt-image-2.6-flare` 共用一条注释）。
+- 命中注释后，首页模型下拉会显示为 `gpt-image-2.6-flare （正常模型，适合日常使用）`；下拉选中的值仍是纯模型 ID，不会把注释发给接口。
+- 一个配置里可以填多个模型（逗号分隔），下拉会逐个显示并各自匹配注释。
+
 **docker compose 示例**（完整版见 [`deploy/docker-compose.example.yml`](deploy/docker-compose.example.yml)）
 
 ```yaml
@@ -454,6 +468,8 @@ curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: https://169.254.169.254/l
 | — | `TEXT_API_KEY` | 文本上游 KEY，**只在容器内**；与 `TEXT_API_URL` 需成对出现 |
 | `VITE_DEFAULT_TEXT_MODEL` | `DEFAULT_TEXT_MODEL` | 预置文本配置的模型名（如 `deepseek-flash`），设置后访客开箱即用 Agent；留空不预置 |
 | `VITE_DEFAULT_TEXT_MODEL_NAME` | `DEFAULT_TEXT_MODEL_NAME` | 预置文本配置的显示名，默认「默认（文本）」 |
+| `VITE_DEFAULT_IMAGE_MODEL` | `DEFAULT_IMAGE_MODEL` | 默认生图模型（新建配置时使用），留空用内置 `gpt-image-2.6-sunburst` |
+| `VITE_IMAGE_MODEL_NOTES` | `IMAGE_MODEL_NOTES` | 模型注释，格式 `模型名=注释;模型名=注释`；模型名不区分大小写，显示在首页模型下拉里 |
 | — | `IMAGE_PROXY_ALLOW_HOSTS` | 图片代理域名白名单，逗号分隔，如 `cdn.example.com,files.example.com` |
 
 > 旧变量 `VITE_SHOW_DEFAULT_CONFIG_ONLY`／`SHOW_DEFAULT_CONFIG_ONLY` 仍可使用，等同于对应的 `SHOW_PRESET_CONFIG_ONLY`。

@@ -7,6 +7,7 @@ import { hasActiveDataOperations, trackDataTransfer } from '../lib/dataOperation
 import { useSettingsDataTransfer } from '../lib/dataProgress'
 import { isApiProxyAvailable, isApiProxyLocked, readClientDevProxyConfig } from '../lib/devProxy'
 import { DEFAULT_SVG_MODEL, getImageModelFamily, isGptImage26PlusModel } from '../lib/imageModels'
+import { resolveSvgModel } from '../lib/svgModel'
 import { isTauri } from '../lib/platform'
 import { useStore, exportData, importData, clearData, type SettingsTab } from '../store'
 import {
@@ -15,6 +16,7 @@ import {
   DEFAULT_FAL_BASE_URL,
   DEFAULT_FAL_MODEL,
   DEFAULT_IMAGES_MODEL,
+  DEFAULT_PROFILE_IMAGE_MODEL,
   DEFAULT_RESPONSES_MODEL,
   DEFAULT_SETTINGS,
   findEquivalentApiProfile,
@@ -138,8 +140,8 @@ function isPristineNewOpenAIProfile(profile: ApiProfile) {
     profile.provider === 'openai' &&
     profile.baseUrl === DEFAULT_SETTINGS.baseUrl &&
     profile.apiKey === '' &&
-    profile.model === DEFAULT_IMAGES_MODEL &&
-    profile.imageGenerationModel === DEFAULT_IMAGES_MODEL &&
+    profile.model === DEFAULT_PROFILE_IMAGE_MODEL &&
+    profile.imageGenerationModel === DEFAULT_PROFILE_IMAGE_MODEL &&
     !profile.svgModel &&
     profile.timeout === DEFAULT_SETTINGS.timeout &&
     profile.apiMode === 'images' &&
@@ -1667,11 +1669,11 @@ export default function SettingsModal() {
                     onBlur={(e) => commitActiveProfilePatch({ svgModel: e.target.value.trim() || undefined })}
                     type="text"
                     disabled={activeProfileLocked}
-                    placeholder={DEFAULT_SVG_MODEL}
+                    placeholder={resolveSvgModel(activeProfile, draft)}
                     className="w-full rounded-xl border border-transparent bg-black/[0.04] px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:bg-white/[0.06] dark:text-gray-200 dark:focus:border-blue-500/50"
                   />
                   <div data-selectable-text className="mt-1.5 text-xs leading-6 text-gray-500 dark:text-gray-500">
-                    输出 SVG 时，图像模型先生成参考图，再由该文本模型编写 SVG，其 token 用量另行计费。留空时使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_SVG_MODEL}</code>。
+                    输出 SVG 时，图像模型先生成参考图，再由该文本模型编写 SVG，其 token 用量另行计费。留空时优先使用 <strong>Agent 配置中的文本模型</strong>；未启用 Agent 时使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_SVG_MODEL}</code>。
                   </div>
                 </label>
               )}

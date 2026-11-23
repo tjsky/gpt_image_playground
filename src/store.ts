@@ -3368,6 +3368,7 @@ async function executeAgentRound(
               referenceImageDataUrls: references.dataUrls,
               referenceIds,
               allowPromptRewrite: requestSettings.allowPromptRewrite,
+              settings: requestSettings,
               signal: controller.signal,
               onImageToolStarted: shouldStreamAssistantMessage
                 ? async () => {

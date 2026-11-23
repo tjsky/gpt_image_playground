@@ -1,6 +1,6 @@
 import { OUTPUT_FORMATS, type ApiProfile, type AppSettings, type ImageSearchGrounding, type ResponsesOutputItem, type TaskParams, type TaskRecord } from '../types'
 import { blobToDataUrl } from './dataUrl'
-import { DEFAULT_SVG_MODEL } from './imageModels'
+import { resolveSvgModel } from './svgModel'
 import { apiFetch, isTauri } from './platform'
 
 export const MIME_MAP: Record<string, string> = {
@@ -12,10 +12,15 @@ export const MIME_MAP: Record<string, string> = {
 }
 
 /** GPT Image 2.6 的 complexity、SVG 和 GIF 字段；Images API 生成请求和 Responses 图像工具格式相同 */
-export function applyGptImage26Params(target: Record<string, unknown>, params: TaskParams, profile: ApiProfile) {
+export function applyGptImage26Params(
+  target: Record<string, unknown>,
+  params: TaskParams,
+  profile: ApiProfile,
+  settings?: Partial<AppSettings> | null,
+) {
   if (params.complexity !== 'auto') target.complexity = params.complexity
   if (params.output_format === 'svg') {
-    target.svg = { model: profile.svgModel?.trim() || DEFAULT_SVG_MODEL }
+    target.svg = { model: resolveSvgModel(profile, settings) }
   }
   if (params.output_format === 'gif') {
     target.frame_count = params.frame_count

@@ -111,7 +111,7 @@ function createHeaders(profile: ApiProfile, apiKind: 'image' | 'text' = 'image')
   }
 }
 
-function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: string): Record<string, unknown> {
+function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: string, settings?: Partial<AppSettings> | null): Record<string, unknown> {
   const tool: Record<string, unknown> = {
     type: 'image_generation',
     action: 'auto',
@@ -126,7 +126,7 @@ function createImageTool(params: TaskParams, profile: ApiProfile, maskDataUrl?: 
   }
 
   tool.quality = params.quality
-  applyGptImage26Params(tool, params, profile)
+  applyGptImage26Params(tool, params, profile, settings)
 
   if (params.output_format !== 'png' && params.output_compression != null) {
     tool.output_compression = params.output_compression
@@ -176,7 +176,7 @@ function createGenerateImageFunctionTool() {
 function createAgentTools(params: TaskParams, profile: ApiProfile, settings: AppSettings, maskDataUrl?: string): Array<Record<string, unknown>> {
   const tools: Array<Record<string, unknown>> = settings.agentApiConfigMode === 'hybrid'
     ? [createGenerateImageFunctionTool()]
-    : [createImageTool(params, profile, maskDataUrl)]
+    : [createImageTool(params, profile, maskDataUrl, settings)]
   const singleImageToolInstruction = settings.agentApiConfigMode === 'hybrid'
     ? 'For single images or prerequisite/base images, use the generate_image tool instead.'
     : 'For single images or prerequisite/base images, use the built-in image_generation tool instead.'
@@ -744,12 +744,14 @@ export async function callBatchImageSingle(opts: {
   referenceImageDataUrls: string[]
   referenceIds?: string[]
   allowPromptRewrite?: boolean
+  /** 用于解析 SVG 编写模型（留空时取 Agent 文本模型） */
+  settings?: Partial<AppSettings> | null
   signal?: AbortSignal
   onImageToolStarted?: () => void | Promise<void>
   onPartialImage?: (event: { image: string; partialImageIndex?: number }) => void | Promise<void>
   onImageToolCompleted?: (image: AgentApiResultImage) => void | Promise<void>
 }): Promise<BatchImageCallResult> {
-  const { profile, params, batchItemId, prompt, referenceImageDataUrls, referenceIds, allowPromptRewrite, signal, onImageToolStarted, onPartialImage, onImageToolCompleted } = opts
+  const { profile, params, batchItemId, prompt, referenceImageDataUrls, referenceIds, allowPromptRewrite, settings, signal, onImageToolStarted, onPartialImage, onImageToolCompleted } = opts
   const mime = MIME_MAP[params.output_format] || 'image/png'
   const proxyConfig = readClientDevProxyConfig()
   const useApiProxy = shouldUseApiProxy(profile.apiProxy, proxyConfig)
@@ -794,7 +796,7 @@ export async function callBatchImageSingle(opts: {
     if (!profile.codexCli) {
       tool.size = params.size
     }
-    applyGptImage26Params(tool, params, profile)
+    applyGptImage26Params(tool, params, profile, settings)
     if (params.output_format !== 'png' && params.output_compression != null) {
       tool.output_compression = params.output_compression
     }

@@ -5,6 +5,7 @@ import { DEFAULT_PARAMS, MAX_INPUT_IMAGES, type TaskRecord } from '../types'
 import { getActiveAgentRounds } from '../lib/agentConversationState'
 import { createSettingsForApiProfile, getCustomProviderDefinition, getActiveApiProfile, getAgentImageApiProfile, resolveApiProfileModel, splitModelList } from '../lib/apiProfiles'
 import { getImageModelFamily, isVectorOrAnimatedFormat } from '../lib/imageModels'
+import { formatImageModelLabel } from '../lib/imageModelNotes'
 import { getImageSearchSupport, getImageThinkingSupport } from '../lib/imageSearch'
 import { ensureImageCached, getCachedImage } from '../lib/imageCache'
 import { toReferenceImage } from '../lib/inputImages'
@@ -452,7 +453,7 @@ export default function InputBar() {
   const isTemporarilyReusedProfile = activeProfile.id !== currentActiveProfile.id
   const modelOptions = useMemo(() => (
     splitModelList(settings.profiles.find((profile) => profile.id === activeProfile.id)?.model ?? activeProfile.model)
-      .map((model) => ({ label: model, value: model }))
+      .map((model) => ({ label: formatImageModelLabel(model), value: model }))
   ), [activeProfile.id, activeProfile.model, settings.profiles])
   const handleModelChange = useCallback((model: string) => {
     // 临时复用其他配置时只切换本次复用的模型，不改动该配置记住的选择

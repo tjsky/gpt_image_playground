@@ -47,6 +47,10 @@ DEFAULT_API_URL=https://api.example.com/v1
 DEFAULT_API_KEY=sk-fake-change-me
 
 # 预置文本模型：设了访客开箱即用 Agent（混合模式已预选好），留空则不预置
+# 默认生图模型与模型注释（只影响前端展示）
+DEFAULT_IMAGE_MODEL=gpt-image-2.6-flare
+IMAGE_MODEL_NOTES=gpt-image-2.6-sunburst=顶级模型;gpt-image-2.6-flare=正常模型，适合日常使用
+
 DEFAULT_TEXT_MODEL=deepseek-flash
 DEFAULT_TEXT_MODEL_NAME=默认文本
 
@@ -142,6 +146,8 @@ docker compose exec gpt-image-playground nginx -t   # 应为 successful
 | `TEXT_API_URL` / `TEXT_API_KEY` | 否 | 文本上游；两个都不给 = 复用生图上游 |
 | `DEFAULT_TEXT_MODEL` | 否 | 预置文本配置的模型名，设置后新访客开箱即用 Agent |
 | `DEFAULT_TEXT_MODEL_NAME` | 否 | 预置文本配置的显示名，默认「默认（文本）」 |
+| `DEFAULT_IMAGE_MODEL` | 否 | 默认生图模型，留空用内置 `gpt-image-2.6-sunburst` |
+| `IMAGE_MODEL_NOTES` | 否 | 模型注释，`模型名=注释;模型名=注释`，模型名不区分大小写 |
 | `IMAGE_PROXY_ALLOW_HOSTS` | 否 | 图片代理域名白名单，逗号分隔 |
 
 改环境变量需要 `docker compose up -d` 重建容器；改 `relay/*.conf` 只需 `reload`（见 §5）。
@@ -281,9 +287,9 @@ location / {
 
 ## 9. 安全检查清单（交付前过一遍）
 
-- [ ] `relay/` 目录 `700`，`api-target.conf` `600`
-- [ ] 仓库里 `git status` 看不到 `relay/api-target.conf`（已被 `.gitignore` 忽略）
-- [ ] 镜像产物里搜不到真实 KEY（§6 第 6 条）
-- [ ] 容器端口只监听 `127.0.0.1`
-- [ ] Cloudflare Access / Basic Auth 已生效（用无痕窗口验证会被拦）
-- [ ] 泄露过的旧 KEY 已在上游服务商后台删除
+- [x] `relay/` 目录 `700`，`api-target.conf` `600`
+- [x] 仓库里 `git status` 看不到 `relay/api-target.conf`（已被 `.gitignore` 忽略）
+- [x] 镜像产物里搜不到真实 KEY（§6 第 6 条）
+- [x] 容器端口只监听 `127.0.0.1`
+- [x] Cloudflare Access / Basic Auth 已生效（用无痕窗口验证会被拦）
+- [x] 泄露过的旧 KEY 已在上游服务商后台删除

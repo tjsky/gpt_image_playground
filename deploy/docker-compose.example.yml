@@ -26,6 +26,10 @@ services:
       # 图片代理域名白名单（可选，逗号分隔）
       IMAGE_PROXY_ALLOW_HOSTS: ${IMAGE_PROXY_ALLOW_HOSTS:-}
 
+      # 默认生图模型与模型注释（只影响前端展示，不含凭据）
+      DEFAULT_IMAGE_MODEL: ${DEFAULT_IMAGE_MODEL:-}
+      IMAGE_MODEL_NOTES: ${IMAGE_MODEL_NOTES:-}
+
       # ② 预置文本配置的模型名：设了访客开箱即用（Agent 混合模式已预选好）
       # 留空则不预置，访客需自己在设置里加文本配置
       DEFAULT_TEXT_MODEL: ${DEFAULT_TEXT_MODEL:-}
