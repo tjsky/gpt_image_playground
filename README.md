@@ -406,18 +406,40 @@ npm run build
 <a id="site-api-proxy"></a>
 ## 🛡️ 站点 API 代理（双层脱敏）
 
-本版本在 Nginx 层加了一层「假 KEY 校验 + 真 KEY 注入」：站点对访客开箱即用，而访客在前端既看不到中转站信息，也拿不到可用的真实 KEY。
+本版本在 Nginx 层加了一层「假 KEY 校验 + 真 KEY 注入」：站点对访客开箱即用，而访客在前端既看不到中转站信息，也拿不到可用的真实 KEY。图片与文本两条通道都支持，且可以分别指向不同服务商。
 
 ```
-浏览器 ──「假地址 + 假 KEY」──▶ 本站 Nginx ──「真实上游 + 真实 KEY」──▶ 中转站
+浏览器 ──「假地址 + 假 KEY」──▶ 本站 Nginx ──「真实上游 + 真实 KEY」──▶ 服务商
                                 │
-                                ├─ /api-proxy/*          校验假 KEY、注入真 KEY、路径白名单、限流
-                                └─ /image-proxy/         校验 X-Image-URL 头后中转图片，绕开跨域
+                                ├─ /api-proxy/images/* 与不带标记的 responses → 图像上游
+                                ├─ /api-proxy/responses（X-Api-Kind: text）     → 文本上游
+                                └─ /image-proxy/       校验 X-Image-URL 头后中转图片，绕开跨域
 ```
 
 - 访客使用默认配置时，前端把请求发到同源 `/api-proxy/...`；Nginx 校验 `Authorization` 是否等于假 KEY，再改写成真实 KEY 转发到真实上游。
+- 分流靠请求头 `X-Api-Kind`：Agent 的文本请求带 `text`，生图请求不带（默认图像）。这个头由前端自动加，访客无需感知。
 - 访客新建配置填自己的 API 地址与 KEY 时，请求不经本站代理，直连自己的服务商（因此 `LOCK_API_PROXY` 应保持 `false`）。
 - 真实上游与真实 KEY 只存在于容器环境变量或挂载的 `relay/api-target.conf`，**不会进入 JS 产物**。
+
+### 两种 KEY 配置
+
+| 模式 | 适用 | 配置方式 |
+| --- | --- | --- |
+| ① 双 KEY | 生图与文本用不同服务商（或同一家的不同分组） | `API_PROXY_URL`+`API_PROXY_KEY` 填生图；`TEXT_API_URL`+`TEXT_API_KEY` 填文本 |
+| ② 单 KEY 全能 | 一个 KEY 既能生图又能文本 | 只填 `API_PROXY_URL`+`API_PROXY_KEY`，文本段留空即自动回落到图像上游 |
+
+> 混合 Agent 模式（文本模型调用工具生图）支持双 KEY。**原生 Agent 模式**（由上游模型自带 `image_generation` 工具）要求同一个 KEY 同时返回文本与图像，因此只能用模式 ②。
+
+### 访客开箱即用（预置文本配置）
+
+设置 `DEFAULT_TEXT_MODEL`（如 `deepseek-flash`）后，首次访问的浏览器会自动带上两份配置：
+
+- `默认`：生图配置（模型为内置默认图像模型）
+- `默认文本`：`apiMode=responses`，模型为 `DEFAULT_TEXT_MODEL`，同样走本站代理、同一个假 KEY
+
+并自动把 Agent 切到「混合模式」，访客打开 Agent 就能直接对话生图。可选 `DEFAULT_TEXT_MODEL_NAME` 自定义这份配置的显示名。
+
+> 只有「首次访问 / 空本地存储」的用户会得到预置；已有本地设置的老用户不受影响，需要自己在设置里加一份文本配置。
 
 **docker compose 示例**（完整版见 [`deploy/docker-compose.example.yml`](deploy/docker-compose.example.yml)）
 
@@ -430,6 +452,14 @@ services:
     environment:
       DEFAULT_API_URL: https://api.example.com/v1    # 前端可见的假地址，随便填
       DEFAULT_API_KEY: sk-fake-please-change         # 前端可见的假 KEY
+      # ① 双 KEY：文本与生图分开
+      API_PROXY_URL: https://cf.api.fan/v1
+      API_PROXY_KEY: sk-real-image-key
+      TEXT_API_URL: https://api.deepseek.com/v1
+      TEXT_API_KEY: sk-real-text-key
+      # ② 单 KEY：把上面两行留空即可，文本会自动复用生图上游
+      # 预置文本配置，让访客开箱即用（留空则不预置）
+      DEFAULT_TEXT_MODEL: deepseek-flash
       ENABLE_API_PROXY: "true"
       LOCK_API_PROXY: "false"
     volumes:
@@ -439,7 +469,7 @@ services:
 
 **管理中转站（推荐：挂载配置文件，`reload` 生效，不用重建镜像）**
 
-1. 复制 [`deploy/relay/api-target.conf.example`](deploy/relay/api-target.conf.example) 为 `relay/api-target.conf`，填真实上游与真实 KEY（`chmod 600`，不要提交到 git）。
+1. 复制 [`deploy/relay/api-target.conf.example`](deploy/relay/api-target.conf.example) 为 `relay/api-target.conf`，按注释填 `$relay_image_*` / `$relay_text_*` 四行（`chmod 600`，不要提交到 git）。
 2. 复制 [`deploy/relay/image-allow.conf.example`](deploy/relay/image-allow.conf.example) 为 `relay/image-allow.conf`，填中转站图片 CDN 域名白名单。
 3. 改完执行：
 
@@ -454,12 +484,13 @@ ln -sfn api-target.a.conf relay/api-target.conf
 docker compose exec gpt-image-playground nginx -s reload
 ```
 
-不挂载文件时，也可用 `API_PROXY_URL` / `API_PROXY_KEY` / `IMAGE_PROXY_ALLOW_HOSTS` 三个环境变量，容器启动时自动生成同样的片段（改这三个变量需要重启容器）。
+不挂载文件时，也可用 `API_PROXY_URL` / `API_PROXY_KEY` / `TEXT_API_URL` / `TEXT_API_KEY` / `IMAGE_PROXY_ALLOW_HOSTS` 环境变量，容器启动时自动生成同样的片段（改这些变量需要重启容器）。
 
 **安全提醒**
 
 - 代理对访客开箱即用，等于把额度开放给所有能访问站点的人：建议外层加 Cloudflare Access 或 Nginx Basic Auth，并留意上游用量。
 - 已内置：路径白名单（仅 `images/generations`、`images/edits`、`images/tasks/*`、`responses`、`tasks/*`）、每 IP 限流、图片代理仅允许 https 且拦截环回/内网地址。
+- `X-Api-Kind` 只是分流标记，访客可以自己指定——它只会决定用哪套真实 KEY，不会拿到 KEY 本身。
 - 若前面还有 Cloudflare，限流看到的是回源 IP，需另配 realip 才能按真实访客限流。
 
 **自检命令**
@@ -470,6 +501,10 @@ curl -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8080/api-proxy/im
 # 白名单外的路径 → 403
 curl -o /dev/null -w '%{http_code}\n' -X POST -H 'Authorization: Bearer sk-fake-please-change' \
   http://localhost:8080/api-proxy/chat/completions
+# 文本分流：带 X-Api-Kind: text 应打到文本上游（返回 JSON 即通）
+curl -s -X POST http://localhost:8080/api-proxy/responses \
+  -H 'Authorization: Bearer sk-fake-please-change' -H 'X-Api-Kind: text' \
+  -H 'Content-Type: application/json' -d '{"model":"deepseek-flash","input":"只回复两个字：收到"}'
 # 图片代理 SSRF → 403（目标 URL 走请求头；?url= 仍兼容，但不支持带 & 的签名 URL）
 curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: http://127.0.0.1/a.png' http://localhost:8080/image-proxy/
 curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: https://169.254.169.254/latest/meta-data/' http://localhost:8080/image-proxy/
@@ -499,6 +534,10 @@ curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: https://169.254.169.254/l
 | `VITE_DEFAULT_API_KEY` | `DEFAULT_API_KEY` | 前端展示的「假 KEY」，仅用于 Nginx 校验站点代理，泄露无价值 |
 | — | `API_PROXY_URL` | 真实上游地址，**只在容器内**，不要写进任何 `VITE_` 变量 |
 | — | `API_PROXY_KEY` | 真实上游 KEY，**只在容器内** |
+| — | `TEXT_API_URL` | 文本上游地址，**只在容器内**；留空则文本请求复用 `API_PROXY_URL` |
+| — | `TEXT_API_KEY` | 文本上游 KEY，**只在容器内**；与 `TEXT_API_URL` 需成对出现 |
+| `VITE_DEFAULT_TEXT_MODEL` | `DEFAULT_TEXT_MODEL` | 预置文本配置的模型名（如 `deepseek-flash`），设置后访客开箱即用 Agent；留空不预置 |
+| `VITE_DEFAULT_TEXT_MODEL_NAME` | `DEFAULT_TEXT_MODEL_NAME` | 预置文本配置的显示名，默认「默认（文本）」 |
 | — | `IMAGE_PROXY_ALLOW_HOSTS` | 图片代理域名白名单，逗号分隔，如 `cdn.example.com,files.example.com` |
 
 > 旧变量 `VITE_SHOW_DEFAULT_CONFIG_ONLY`／`SHOW_DEFAULT_CONFIG_ONLY` 仍可使用，等同于对应的 `SHOW_PRESET_CONFIG_ONLY`。
