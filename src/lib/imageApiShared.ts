@@ -191,11 +191,11 @@ async function probeNoCorsReachability(url: string, timeoutMs = 8000): Promise<'
 }
 
 /**
- * 把图片 URL 换成本站图片中转地址，绕开中转站返回 URL 时的浏览器跨域限制。
- * 只在请求真正经过本站 API 代理时使用；站点未部署代理时不会有任何改写。
+ * 本站图片中转地址。目标 URL 通过请求头 X-Image-URL 传递：
+ * 放在查询串里会被 Nginx 原样透传（不解码），带 & 的签名 URL 会被截断。
  */
-export function buildSiteImageProxyUrl(url: string): string {
-  return `${window.location.origin}/image-proxy/?url=${encodeURIComponent(url)}`
+export function buildSiteImageProxyUrl(): string {
+  return `${window.location.origin}/image-proxy/`
 }
 
 /**
@@ -209,13 +209,16 @@ export async function fetchImageUrlAsDataUrl(
 ): Promise<string> {
   if (isDataUrl(url)) return url
 
-  const targetUrl = viaImageProxy && isHttpUrl(url) ? buildSiteImageProxyUrl(url) : url
+  const useImageProxy = viaImageProxy && isHttpUrl(url)
+  const targetUrl = useImageProxy ? buildSiteImageProxyUrl() : url
+  const headers = useImageProxy ? { 'X-Image-URL': url } : undefined
 
   let response: Response
   try {
     response = await apiFetch(targetUrl, {
       cache: 'no-store',
       signal,
+      headers,
     })
   } catch (err) {
     if (err instanceof TypeError) {

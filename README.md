@@ -23,7 +23,7 @@
 本项目是 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 的自用修改版（版本号形如 `v0.9.0-tjsky.1`）。核心功能与架构由原作者开发，本仓库只改造部署与代理相关部分：
 
 - **双层脱敏 API 代理**：前端只持有「假 API 地址 + 假 KEY」，真实上游与真实 KEY 只存在于容器内；Nginx 校验假 KEY 后注入真 KEY 转发，访客在前端看不到任何中转站信息。
-- **图片下载中转**：中转站返回图片 URL 时改走本站 `/image-proxy/` 下载，绕开浏览器跨域限制，并带域名白名单防 SSRF。
+- **图片下载中转**：中转站返回图片 URL 时改走本站 `/image-proxy/` 下载，绕开浏览器跨域限制，并带域名白名单防 SSRF。目标 URL 由请求头 `X-Image-URL` 传递（查询串会被 Nginx 原样透传，带 `&` 的签名 URL 会被截断）。
 - 已移除上游的赞助商展示与推广预置（`sponsor-presets.json`、公告推广素材、设置页赞助入口）。
 
 配置方法见 [站点 API 代理](#site-api-proxy)。
@@ -412,7 +412,7 @@ npm run build
 浏览器 ──「假地址 + 假 KEY」──▶ 本站 Nginx ──「真实上游 + 真实 KEY」──▶ 中转站
                                 │
                                 ├─ /api-proxy/*          校验假 KEY、注入真 KEY、路径白名单、限流
-                                └─ /image-proxy/?url=*   域名白名单校验后中转图片，绕开跨域
+                                └─ /image-proxy/         校验 X-Image-URL 头后中转图片，绕开跨域
 ```
 
 - 访客使用默认配置时，前端把请求发到同源 `/api-proxy/...`；Nginx 校验 `Authorization` 是否等于假 KEY，再改写成真实 KEY 转发到真实上游。
@@ -459,7 +459,7 @@ docker compose exec gpt-image-playground nginx -s reload
 **安全提醒**
 
 - 代理对访客开箱即用，等于把额度开放给所有能访问站点的人：建议外层加 Cloudflare Access 或 Nginx Basic Auth，并留意上游用量。
-- 已内置：路径白名单（仅 `images/generations`、`images/edits`、`responses`、`tasks/*`）、每 IP 限流、图片代理 https 与内网地址拦截。
+- 已内置：路径白名单（仅 `images/generations`、`images/edits`、`images/tasks/*`、`responses`、`tasks/*`）、每 IP 限流、图片代理仅允许 https 且拦截环回/内网地址。
 - 若前面还有 Cloudflare，限流看到的是回源 IP，需另配 realip 才能按真实访客限流。
 
 **自检命令**
@@ -470,8 +470,9 @@ curl -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8080/api-proxy/im
 # 白名单外的路径 → 403
 curl -o /dev/null -w '%{http_code}\n' -X POST -H 'Authorization: Bearer sk-fake-please-change' \
   http://localhost:8080/api-proxy/chat/completions
-# 图片代理 SSRF → 403
-curl -o /dev/null -w '%{http_code}\n' 'http://localhost:8080/image-proxy/?url=http://127.0.0.1/'
+# 图片代理 SSRF → 403（目标 URL 走请求头；?url= 仍兼容，但不支持带 & 的签名 URL）
+curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: http://127.0.0.1/a.png' http://localhost:8080/image-proxy/
+curl -o /dev/null -w '%{http_code}\n' -H 'X-Image-URL: https://169.254.169.254/latest/meta-data/' http://localhost:8080/image-proxy/
 ```
 
 ---

@@ -53,7 +53,8 @@ if [ ! -f "$RELAY_DIR/image-allow.conf" ]; then
         IMAGE_HOSTS_PATTERN=$(printf '%s' "$IMAGE_HOSTS" | sed -e 's/[[:space:]]//g' -e 's/,/|/g')
         cat > "$RELAY_DIR/image-allow.conf" <<EOF
 # 由 IMAGE_PROXY_ALLOW_HOSTS 生成（默认只拦截非 https 与内网地址）
-if (\$arg_url !~* "^https://([A-Za-z0-9-]+\.)*($IMAGE_HOSTS_PATTERN)/") {
+# 变量 $image_target 由模板从请求头 X-Image-URL 或 ?url= 取值
+if (\$image_target !~* "^https://([A-Za-z0-9-]+\.)*($IMAGE_HOSTS_PATTERN)/") {
     return 403 "Image host not allowed";
 }
 EOF
